@@ -6,7 +6,7 @@
  */
 
 (function () {
-  const currentDomain = window.location.hostname;
+  const currentDomain = window.location.hostname || (window.location.pathname ? window.location.pathname.split('/').pop() : 'local-file') || 'local-demo';
 
   // Vault Profiles Database with PINs, Cards, Passwords per User ID
   const VAULT_PROFILES = {
@@ -140,6 +140,7 @@
           // Return default seed vault for profile
           const profile = VAULT_PROFILES[userId] || VAULT_PROFILES['ID-3'];
           callback({
+            name: profile.name,
             email: profile.email,
             password: profile.password,
             card: profile.card
@@ -149,6 +150,7 @@
     } else {
       const profile = VAULT_PROFILES[userId] || VAULT_PROFILES['ID-3'];
       callback({
+        name: profile.name,
         email: profile.email,
         password: profile.password,
         card: profile.card
@@ -173,58 +175,19 @@
     const inputs = Array.from(document.querySelectorAll('input'));
     if (inputs.length === 0) return;
 
-    const hasPassword = inputs.some(i => i.type === 'password');
-    const hasCard = inputs.some(i => {
-      const name = (i.name || '').toLowerCase();
-      const id = (i.id || '').toLowerCase();
-      const auto = (i.autocomplete || '').toLowerCase();
-      return auto.includes('cc-') || name.includes('card') || id.includes('card') || name.includes('pin') || id.includes('pin') || name.includes('cvv');
-    });
-
-    if (hasPassword || hasCard) {
-      autoPopupPromptDone = true;
-      resolveActiveUser((profile) => {
-        // Check if custom data exists in local storage for this domain
-        if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
-          chrome.storage.local.get(['user_vaults'], (storage) => {
-            const vaults = storage.user_vaults || {};
-            const userVault = vaults[profile.id] || {};
-            const hasCustomData = !!userVault[currentDomain];
-
-            if (!hasCustomData) {
-              // NO DATA FOUND: Auto-popup prompt to enter site data
-              showDataEntryPopupModal(profile, hasCard ? 'card' : 'password');
-            } else {
-              // DATA EXISTS: Show Face ID verification overlay and auto-fill
-              showFaceIDVaultModal(profile, userVault[currentDomain]);
-            }
-          });
-        } else {
-          showFaceIDVaultModal(profile, {
-            email: profile.email,
-            password: profile.password,
-            card: profile.card
-          });
-        }
+    autoPopupPromptDone = true;
+    resolveActiveUser((profile) => {
+      getVaultDataForDomain(profile.id, currentDomain, (vaultData) => {
+        showFaceIDVaultModal(profile, vaultData);
       });
-    }
+    });
   }
 
   // Listen for sensitive field focus
   document.addEventListener('focusin', (e) => {
     const target = e.target;
     if (target && target.tagName === 'INPUT') {
-      const type = (target.type || '').toLowerCase();
-      const name = (target.name || '').toLowerCase();
-      const id = (target.id || '').toLowerCase();
-      const auto = (target.autocomplete || '').toLowerCase();
-
-      const isPassword = type === 'password';
-      const isCard = auto.includes('cc-') || name.includes('card') || id.includes('card') || name.includes('pin') || id.includes('pin') || name.includes('cvv');
-
-      if (isPassword || isCard) {
-        showAutofillPill(target, isCard ? 'card' : 'password');
-      }
+      showAutofillPill(target, 'autofill');
     }
   });
 
@@ -302,14 +265,26 @@
         </p>
 
         <form id="vault-entry-form" style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px;">
-          <div>
-            <label style="font-size:11px; color:#94a3b8; display:block; margin-bottom:3px;">User / Email Address</label>
-            <input type="text" id="entry-email" value="${profile.email}" style="width:100%; background:#03060c; border:1px solid #1e293b; color:#fff; padding:8px; border-radius:8px; font-size:12px; font-family:monospace;" required />
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+            <div>
+              <label style="font-size:11px; color:#94a3b8; display:block; margin-bottom:3px;">Full Name</label>
+              <input type="text" id="entry-name" value="${profile.name}" style="width:100%; background:#03060c; border:1px solid #1e293b; color:#fff; padding:8px; border-radius:8px; font-size:12px; font-family:monospace;" required />
+            </div>
+            <div>
+              <label style="font-size:11px; color:#94a3b8; display:block; margin-bottom:3px;">Phone Number</label>
+              <input type="text" id="entry-phone" value="${profile.phone || '+91 98765 43210'}" style="width:100%; background:#03060c; border:1px solid #1e293b; color:#fff; padding:8px; border-radius:8px; font-size:12px; font-family:monospace;" />
+            </div>
           </div>
 
-          <div>
-            <label style="font-size:11px; color:#94a3b8; display:block; margin-bottom:3px;">Site Password</label>
-            <input type="password" id="entry-password" value="${profile.password}" style="width:100%; background:#03060c; border:1px solid #1e293b; color:#fff; padding:8px; border-radius:8px; font-size:12px; font-family:monospace;" required />
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+            <div>
+              <label style="font-size:11px; color:#94a3b8; display:block; margin-bottom:3px;">User / Email Address</label>
+              <input type="text" id="entry-email" value="${profile.email}" style="width:100%; background:#03060c; border:1px solid #1e293b; color:#fff; padding:8px; border-radius:8px; font-size:12px; font-family:monospace;" required />
+            </div>
+            <div>
+              <label style="font-size:11px; color:#94a3b8; display:block; margin-bottom:3px;">Site Password</label>
+              <input type="password" id="entry-password" value="${profile.password}" style="width:100%; background:#03060c; border:1px solid #1e293b; color:#fff; padding:8px; border-radius:8px; font-size:12px; font-family:monospace;" required />
+            </div>
           </div>
 
           <div style="display:grid; grid-template-columns: 2fr 1fr; gap:8px;">
@@ -349,6 +324,8 @@
     modal.querySelector('#vault-entry-form').addEventListener('submit', (e) => {
       e.preventDefault();
       const vaultData = {
+        name: modal.querySelector('#entry-name').value,
+        phone: modal.querySelector('#entry-phone').value,
         email: modal.querySelector('#entry-email').value,
         password: modal.querySelector('#entry-password').value,
         card: {
@@ -356,7 +333,7 @@
           pin: modal.querySelector('#entry-card-pin').value,
           exp: modal.querySelector('#entry-card-exp').value,
           cvv: modal.querySelector('#entry-card-cvv').value,
-          name: profile.name.toUpperCase()
+          name: (modal.querySelector('#entry-name').value || profile.name).toUpperCase()
         }
       };
 
@@ -367,66 +344,90 @@
     });
   }
 
-  // POPUP MODAL 2: Face ID Verification & Autofill when data exists
+  // POPUP MODAL 2: Face ID Verification & Autofill when data exists (Side Positioned Widget with Live Camera)
   function showFaceIDVaultModal(profile, vaultData) {
     if (document.getElementById('campuspass-face-modal')) return;
+
+    let activeCameraStream = null;
 
     const modal = document.createElement('div');
     modal.id = 'campuspass-face-modal';
     modal.style.position = 'fixed';
-    modal.style.inset = '0';
-    modal.style.zIndex = '999999';
-    modal.style.background = 'rgba(4, 7, 17, 0.88)';
-    modal.style.backdropFilter = 'blur(12px)';
-    modal.style.display = 'flex';
-    modal.style.alignItems = 'center';
-    modal.style.justifyContent = 'center';
-    modal.style.padding = '20px';
+    modal.style.bottom = '24px';
+    modal.style.right = '24px';
+    modal.style.zIndex = '9999999';
+    modal.style.width = '370px';
+    modal.style.maxWidth = 'calc(100vw - 32px)';
+    modal.style.boxShadow = '0 10px 40px rgba(0,0,0,0.5), 0 0 30px rgba(6,182,212,0.3)';
 
     const card = vaultData.card || profile.card;
 
     modal.innerHTML = `
-      <div style="background:#090e1d; border:1px solid #06b6d4; border-radius:20px; padding:24px; max-width:460px; width:100%; color:#fff; font-family:monospace; box-shadow:0 0 35px rgba(6,182,212,0.25); text-align:center;">
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #162038; padding-bottom:12px; margin-bottom:16px;">
+      <div style="background:#090e1d; border:1px solid #06b6d4; border-radius:18px; padding:18px; color:#fff; font-family:monospace; text-align:center;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #162038; padding-bottom:10px; margin-bottom:12px;">
           <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-size:18px;">🛡️</span>
-            <span style="font-weight:bold; color:#06b6d4;">CampusPass Face ID Vault</span>
+            <span style="font-size:16px;">🛡️</span>
+            <span style="font-weight:bold; color:#06b6d4; font-size:13px;">CampusPass Face ID Vault</span>
           </div>
-          <span style="font-size:10px; background:#062c43; color:#06b6d4; padding:2px 8px; border-radius:4px; border:1px solid #06b6d4;">LIVENESS ACTIVE</span>
+          <span style="font-size:10px; background:#062c43; color:#06b6d4; padding:2px 8px; border-radius:4px; border:1px solid #06b6d4;">LIVE CAM ACTIVE</span>
         </div>
 
         <!-- Saved Profile & Domain Header -->
-        <div style="background:#03060c; border:1px solid #1e293b; border-radius:12px; padding:12px; text-align:left; margin-bottom:14px; font-size:11px;">
-          <div style="display:flex; justify-content:space-between; color:#94a3b8; margin-bottom:4px;">
-            <span>ACTIVE PROFILE: <strong style="color:#10b981;">${profile.name} (${profile.id})</strong></span>
+        <div style="background:#03060c; border:1px solid #1e293b; border-radius:10px; padding:10px; text-align:left; margin-bottom:12px; font-size:11px;">
+          <div style="display:flex; justify-content:space-between; color:#94a3b8; margin-bottom:3px;">
+            <span>ACTIVE PROFILE: <strong style="color:#10b981;" id="modal-student-name">${profile.name} (${profile.id})</strong></span>
             <span style="color:#38bdf8;">${currentDomain}</span>
           </div>
           <div style="color:#cbd5e1;">📧 Email: <strong style="color:#fff;">${vaultData.email || profile.email}</strong></div>
           <div style="color:#cbd5e1;">🔑 Password: <strong style="color:#38bdf8;">••••••••••••</strong></div>
-          <div style="color:#cbd5e1;">💳 Card: <strong style="color:#f59e0b;">${card.number}</strong> (PIN: <strong style="color:#f59e0b;">••••</strong>)</div>
+          <div style="color:#cbd5e1;">💳 Card: <strong style="color:#f59e0b;" id="modal-student-card">${card.number}</strong></div>
         </div>
 
-        <!-- Camera HUD Video Frame -->
-        <div style="position:relative; width:100%; height:180px; background:#03060c; border:1px solid #1e293b; border-radius:12px; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:center; margin-bottom:14px;" id="face-hud-box">
-          <div style="width:54px; height:54px; border-radius:50%; border:2px dashed #06b6d4; display:flex; align-items:center; justify-content:center; font-size:22px;" id="scanner-icon">
-            📷
+        <!-- Live Video Camera Preview HUD Frame -->
+        <div style="position:relative; width:100%; height:180px; background:#000; border:1px solid #1e293b; border-radius:10px; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:center; margin-bottom:12px;" id="face-hud-box">
+          <video id="hud-cam-video" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover; display:block;"></video>
+          
+          <!-- Overlaid Target Reticle Frame -->
+          <div style="position:absolute; inset:20px; border:1.5px dashed rgba(6,182,212,0.8); border-radius:12px; pointer-events:none; display:flex; align-items:center; justify-content:center;">
+            <div style="width:12px; height:12px; border-top:2px solid #06b6d4; border-left:2px solid #06b6d4; position:absolute; top:-2px; left:-2px;"></div>
+            <div style="width:12px; height:12px; border-top:2px solid #06b6d4; border-right:2px solid #06b6d4; position:absolute; top:-2px; right:-2px;"></div>
+            <div style="width:12px; height:12px; border-bottom:2px solid #06b6d4; border-left:2px solid #06b6d4; position:absolute; bottom:-2px; left:-2px;"></div>
+            <div style="width:12px; height:12px; border-bottom:2px solid #06b6d4; border-right:2px solid #06b6d4; position:absolute; bottom:-2px; right:-2px;"></div>
           </div>
-          <div style="font-size:12px; color:#38bdf8; margin-top:8px;" id="hud-status">Biometric Scanner Ready...</div>
-          <div style="width:80%; height:4px; background:#1e293b; border-radius:2px; margin-top:10px; overflow:hidden;">
-            <div id="hud-bar" style="width:20%; height:100%; background:linear-gradient(90deg, #06b6d4, #10b981); transition:width 0.3s;"></div>
+
+          <!-- Scanning Overlay Bar -->
+          <div style="position:absolute; bottom:8px; left:12px; right:12px; background:rgba(3,6,12,0.75); backdrop-filter:blur(4px); padding:4px 8px; border-radius:6px; border:1px solid rgba(6,182,212,0.4);">
+            <div style="font-size:11px; color:#38bdf8;" id="hud-status">Scanning Face Biometrics...</div>
+            <div style="width:100%; height:3px; background:#1e293b; border-radius:2px; margin-top:4px; overflow:hidden;">
+              <div id="hud-bar" style="width:30%; height:100%; background:linear-gradient(90deg, #06b6d4, #10b981); transition:width 0.3s;"></div>
+            </div>
           </div>
         </div>
 
-        <div id="modal-error-box" style="display:none; padding:10px; border-radius:8px; background:rgba(225,29,72,0.15); border:1px solid #e11d48; color:#f43f5e; font-size:11px; margin-bottom:12px;"></div>
+        <div id="modal-error-box" style="display:none; padding:8px; border-radius:8px; background:rgba(225,29,72,0.15); border:1px solid #e11d48; color:#f43f5e; font-size:11px; margin-bottom:12px;"></div>
 
         <div style="display:flex; justify-content:space-between; gap:8px;">
-          <button id="cancel-face-btn" style="flex:1; padding:10px; background:#1e293b; color:#94a3b8; border:1px solid #334155; border-radius:10px; font-size:12px; cursor:pointer;">Cancel</button>
-          <button id="perform-face-btn" style="flex:2; padding:10px; background:linear-gradient(90deg,#0891b2,#059669); color:#fff; border:none; border-radius:10px; font-size:12px; font-weight:bold; cursor:pointer;">Verify & Autofill</button>
+          <button id="cancel-face-btn" style="flex:1; padding:9px; background:#1e293b; color:#94a3b8; border:1px solid #334155; border-radius:8px; font-size:11px; cursor:pointer;">Cancel</button>
+          <button id="perform-face-btn" style="flex:2; padding:9px; background:linear-gradient(90deg,#0891b2,#059669); color:#fff; border:none; border-radius:8px; font-size:11px; font-weight:bold; cursor:pointer;">Verify & Autofill</button>
         </div>
       </div>
     `;
 
     document.body.appendChild(modal);
+
+    // Start Live Webcam Video Stream
+    const videoEl = modal.querySelector('#hud-cam-video');
+    if (videoEl && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+          activeCameraStream = stream;
+          videoEl.srcObject = stream;
+          videoEl.play().catch(e => {});
+        })
+        .catch(err => {
+          console.warn('Webcam stream notice:', err);
+        });
+    }
 
     let isVerifying = false;
 
@@ -474,12 +475,20 @@
           hudStatus.textContent = `✓ Biometric Verified: ${targetProfile.name} (98.2%)`;
 
           setTimeout(() => {
+            stopWebcam();
             window.removeEventListener('keydown', handleKeyDown);
             modal.remove();
             executeAutofill(targetProfile, targetVaultData);
           }, 600);
         }, 800);
       });
+    }
+
+    function stopWebcam() {
+      if (activeCameraStream) {
+        activeCameraStream.getTracks().forEach(t => t.stop());
+        activeCameraStream = null;
+      }
     }
 
     // Presentation keydown listener (0-9)
@@ -493,16 +502,19 @@
 
     modal.querySelector('#perform-face-btn').addEventListener('click', () => runVerification(activeUserId.replace('ID-', '') || '3'));
     modal.querySelector('#cancel-face-btn').addEventListener('click', () => {
+      stopWebcam();
       window.removeEventListener('keydown', handleKeyDown);
       modal.remove();
     });
   }
 
-  // Execute automatic field population for passwords, PINs, card details, and email
+  // Execute automatic field population for passwords, PINs, card details, full name, phone number, and email
   function executeAutofill(profile, vaultData) {
     const cardData = vaultData.card || profile.card;
     const emailVal = vaultData.email || profile.email;
     const passVal = vaultData.password || profile.password;
+    const fullNameVal = vaultData.name || profile.name;
+    const phoneVal = vaultData.phone || profile.phone || '+91 98765 43210';
 
     const inputs = Array.from(document.querySelectorAll('input'));
 
@@ -511,33 +523,67 @@
       const name = (inp.name || '').toLowerCase();
       const id = (inp.id || '').toLowerCase();
       const auto = (inp.autocomplete || '').toLowerCase();
+      const placeholder = (inp.placeholder || '').toLowerCase();
+
+      const isFullName = (auto.includes('name') && !auto.includes('cc-')) ||
+                         name.includes('fullname') || name.includes('full_name') || name.includes('student_name') || name.includes('studentname') || name === 'name' || id === 'name' || id.includes('fullname') || id.includes('full_name') || placeholder.includes('full name') || placeholder.includes('your name') || placeholder.includes('student name');
+
+      const isPhone = auto.includes('tel') || name.includes('phone') || id.includes('phone') || name.includes('mobile') || id.includes('mobile');
+
+      const isCardNum = auto.includes('cc-number') || 
+                        name.includes('cardnumber') || name.includes('card_number') || name.includes('creditcard') ||
+                        id.includes('cardnumber') || id.includes('card_number') || id.includes('creditcard') ||
+                        name === 'card' || id === 'card' || placeholder.includes('0000');
+
+      const isFullName = !isCardNum && (
+        (auto.includes('name') && !auto.includes('cc-')) ||
+        name.includes('fullname') || name.includes('full_name') || name.includes('student_name') || name.includes('studentname') ||
+        id.includes('fullname') || id.includes('full_name') || id.includes('student_name') || id.includes('studentname') ||
+        name === 'name' || id === 'name' || placeholder.includes('jane doe') || placeholder.includes('john doe') || placeholder.includes('full name')
+      );
+
+      const isCardPin = name.includes('pin') || id.includes('pin') || auto.includes('pin');
+      const isCardExp = auto.includes('cc-exp') || name.includes('exp') || id.includes('exp') || placeholder.includes('mm/yy');
+      const isCardCvv = auto.includes('cc-csc') || name.includes('cvv') || name.includes('cvc') || id.includes('cvv') || id.includes('cvc');
+      const isCardHolder = auto.includes('cc-name') || name.includes('holder') || id.includes('holder');
+      const isPhone = auto.includes('tel') || name.includes('phone') || id.includes('phone') || name.includes('mobile') || id.includes('mobile');
+      const isPassword = type === 'password';
+      const isEmail = type === 'email' || (type === 'text' && (name.includes('user') || name.includes('email') || id.includes('user') || id.includes('email') || name.includes('login') || id.includes('login')));
 
       // Credit Card Number
-      if (auto.includes('cc-number') || name.includes('cardnumber') || name.includes('card_number') || id.includes('card_number') || id.includes('cardnumber') || name === 'card' || id === 'card') {
+      if (isCardNum) {
         setNativeValue(inp, cardData.number);
       }
       // Credit Card PIN
-      else if (name.includes('pin') || id.includes('pin') || auto.includes('pin')) {
+      else if (isCardPin) {
         setNativeValue(inp, cardData.pin || '1234');
       }
       // Credit Card Expiry
-      else if (auto.includes('cc-exp') || name.includes('exp') || id.includes('exp')) {
+      else if (isCardExp) {
         setNativeValue(inp, cardData.exp);
       }
       // Credit Card CVV / CVC
-      else if (auto.includes('cc-csc') || name.includes('cvv') || name.includes('cvc') || id.includes('cvv')) {
+      else if (isCardCvv) {
         setNativeValue(inp, cardData.cvv);
       }
       // Credit Cardholder Name
-      else if (auto.includes('cc-name') || name.includes('holder') || id.includes('holder')) {
+      else if (isCardHolder) {
         setNativeValue(inp, cardData.name || profile.name.toUpperCase());
       }
+      // Full Name (Student / User Name)
+      else if (isFullName) {
+        setNativeValue(inp, fullNameVal);
+      }
+      // Phone Number
+      else if (isPhone) {
+        setNativeValue(inp, phoneVal);
+      }
       // Password
-      else if (type === 'password') {
+      else if (isPassword) {
         setNativeValue(inp, passVal);
       }
       // Email / Username
-      else if (type === 'email' || type === 'text' && (name.includes('user') || name.includes('email') || id.includes('user') || id.includes('email') || name.includes('login') || id.includes('login'))) {
+      else if (isEmail) {
         setNativeValue(inp, emailVal);
       }
     });
