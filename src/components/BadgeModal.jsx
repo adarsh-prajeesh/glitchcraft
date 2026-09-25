@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { X, Printer, Shield, Barcode, CheckCircle2, Copy } from 'lucide-react';
 import { sound } from '../services/sound';
@@ -44,11 +45,10 @@ export default function BadgeModal({ isOpen, onClose, users = [] }) {
             <button
               key={u.id}
               onClick={() => { sound.playClick(); setSelectedUserIndex(idx); }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-mono whitespace-nowrap transition-all cursor-pointer ${
-                idx === selectedUserIndex
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold'
-                  : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
-              }`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono whitespace-nowrap transition-all cursor-pointer ${idx === selectedUserIndex
+                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold'
+                : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
+                }`}
             >
               {u.name.split(' ')[0]} ({u.id})
             </button>
@@ -61,18 +61,16 @@ export default function BadgeModal({ isOpen, onClose, users = [] }) {
           <div className="flex items-center gap-2 mb-3">
             <button
               onClick={() => setShowBack(false)}
-              className={`px-3 py-1 rounded-md text-xs font-mono transition-colors ${
-                !showBack ? 'bg-slate-700 text-white font-bold' : 'text-slate-400 hover:text-slate-200'
-              }`}
+              className={`px-3 py-1 rounded-md text-xs font-mono transition-colors ${!showBack ? 'bg-slate-700 text-white font-bold' : 'text-slate-400 hover:text-slate-200'
+                }`}
             >
               Card Front (Photo & Clearance)
             </button>
             <span className="text-slate-600">•</span>
             <button
               onClick={() => setShowBack(true)}
-              className={`px-3 py-1 rounded-md text-xs font-mono transition-colors ${
-                showBack ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40' : 'text-slate-400 hover:text-slate-200'
-              }`}
+              className={`px-3 py-1 rounded-md text-xs font-mono transition-colors ${showBack ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40' : 'text-slate-400 hover:text-slate-200'
+                }`}
             >
               Card Back (Scannable Barcode)
             </button>

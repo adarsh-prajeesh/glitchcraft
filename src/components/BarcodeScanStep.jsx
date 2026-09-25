@@ -44,7 +44,7 @@ export default function BarcodeScanStep({ step1Data, onSuccess, onBack, onOpenBa
           handleVerifyBarcode(decodedText);
         },
         (errorMessage) => {
-          // Frame parse tick - no barcode in sight yet
+          // Frame tick
         }
       );
 
@@ -73,7 +73,7 @@ export default function BarcodeScanStep({ step1Data, onSuccess, onBack, onOpenBa
     };
   }, []);
 
-  // Hardware Laser Barcode Scanner Listener (USB / Bluetooth barcode guns act as rapid keyboards)
+  // Hardware Laser Barcode Scanner Listener
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (document.activeElement && document.activeElement.tagName === 'INPUT' && document.activeElement !== inputRef.current) {
@@ -84,7 +84,7 @@ export default function BarcodeScanStep({ step1Data, onSuccess, onBack, onOpenBa
       const char = e.key;
 
       if (char === 'Enter') {
-        if (keyBufferRef.current.length >= 4) {
+        if (keyBufferRef.current.length >= 3) {
           const code = keyBufferRef.current.trim();
           keyBufferRef.current = '';
           setBarcodeInput(code);
@@ -124,7 +124,6 @@ export default function BarcodeScanStep({ step1Data, onSuccess, onBack, onOpenBa
       setScannedResult(payload);
       sound.playAccessGranted();
 
-      // Stop camera before transition
       stopCameraBarcodeScanner();
 
       // Transition to Secured Dashboard with Auth Token
@@ -133,7 +132,7 @@ export default function BarcodeScanStep({ step1Data, onSuccess, onBack, onOpenBa
           authToken: response.authToken,
           user: response.user
         });
-      }, 1400);
+      }, 1200);
 
     } catch (err) {
       console.error(err);
@@ -209,14 +208,14 @@ export default function BarcodeScanStep({ step1Data, onSuccess, onBack, onOpenBa
             </div>
             <h4 className="text-sm font-semibold text-slate-200">Camera Barcode Scanner Standby</h4>
             <p className="text-xs text-slate-400 font-mono mt-1 mb-3 max-w-sm">
-              Hold the physical ID card barcode in front of the lens, or use the quick test actions below.
+              Point your camera at the physical ID card barcode, or enter the payload below.
             </p>
             <button
               onClick={startCameraBarcodeScanner}
               className="px-3.5 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-xs font-mono hover:bg-cyan-500/30 transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              <span>Retry Camera Optics</span>
+              <span>Retry Camera Scanner</span>
             </button>
           </div>
         )}
@@ -241,7 +240,7 @@ export default function BarcodeScanStep({ step1Data, onSuccess, onBack, onOpenBa
             </div>
             <p className="text-[11px] text-slate-300 mt-2.5 animate-pulse font-mono flex items-center gap-1">
               <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Generating Secure Session Token & Opening Dashboard...</span>
+              <span>Session Authenticated. Opening Dashboard...</span>
             </p>
           </div>
         )}
@@ -250,7 +249,7 @@ export default function BarcodeScanStep({ step1Data, onSuccess, onBack, onOpenBa
       {/* Error Alert */}
       {errorMsg && (
         <div className="mt-4 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/40 text-rose-300 text-xs flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+          <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
           <div className="flex-1">
             <div className="font-semibold text-rose-200">Authentication Rejected</div>
             <p className="mt-0.5 text-rose-300/90 font-mono text-[11px]">{errorMsg}</p>
@@ -273,7 +272,7 @@ export default function BarcodeScanStep({ step1Data, onSuccess, onBack, onOpenBa
           <input
             ref={inputRef}
             type="text"
-            placeholder="Scan or enter ID Card Barcode (e.g. AUTH-VANCE-8801-L5)"
+            placeholder="Scan or enter ID Card Barcode payload"
             value={barcodeInput}
             onChange={(e) => setBarcodeInput(e.target.value)}
             disabled={loading || !!scannedResult}
@@ -291,89 +290,24 @@ export default function BarcodeScanStep({ step1Data, onSuccess, onBack, onOpenBa
         </button>
       </form>
 
-      {/* Test Barcode & Scannable Badge Helpers */}
-      <div className="mt-5 pt-4 border-t border-slate-800">
-        <div className="flex items-center justify-between mb-2.5">
-          <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-            <Scan className="w-3.5 h-3.5 text-cyan-400" />
-            Physical ID Badge Simulation
+      {/* Quick Verified Subject Card Trigger */}
+      {targetUser?.barcodePayload && (
+        <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-xs font-mono">
+          <span className="text-slate-400">
+            Registered Card for {targetUser.name}:
           </span>
           <button
-            onClick={onOpenBadges}
-            className="text-[11px] font-mono text-cyan-400 hover:text-cyan-300 underline underline-offset-2 cursor-pointer"
+            onClick={() => {
+              setBarcodeInput(targetUser.barcodePayload);
+              handleVerifyBarcode(targetUser.barcodePayload);
+            }}
+            disabled={loading || !!scannedResult}
+            className="text-cyan-400 hover:text-cyan-300 font-bold underline underline-offset-2 cursor-pointer"
           >
-            Open Printable Badge Display
+            Auto-Fill & Scan ({targetUser.barcodePayload})
           </button>
         </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-          {/* Target User's Genuine Barcode */}
-          <button
-            onClick={() => {
-              const payload = targetUser?.barcodePayload || (targetUser?.id === 'SEC-8801' ? 'AUTH-VANCE-8801-L5' : targetUser?.id === 'SEC-8802' ? 'AUTH-MERCER-8802-L4' : 'AUTH-CONNOR-8803-L5');
-              setBarcodeInput(payload);
-              handleVerifyBarcode(payload);
-            }}
-            disabled={loading || !!scannedResult}
-            className="p-2.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-emerald-500/40 hover:border-emerald-400 text-left transition-all group cursor-pointer"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono text-emerald-400 font-semibold">MATCHING ID CARD</span>
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-            </div>
-            <div className="text-xs font-bold text-slate-200 mt-1 truncate">
-              {targetUser?.name}'s Card
-            </div>
-            <div className="text-[10px] text-slate-400 font-mono truncate">
-              {targetUser?.barcodePayload || 'AUTH-VANCE-8801-L5'}
-            </div>
-          </button>
-
-          {/* Mismatch Test (Alex's barcode for Elena) */}
-          <button
-            onClick={() => {
-              const wrongPayload = 'AUTH-MERCER-8802-L4';
-              setBarcodeInput(wrongPayload);
-              handleVerifyBarcode(wrongPayload);
-            }}
-            disabled={loading || !!scannedResult}
-            className="p-2.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-amber-500/50 text-left transition-all group cursor-pointer"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono text-amber-400 font-semibold">MISMATCH TEST</span>
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
-            </div>
-            <div className="text-xs font-bold text-slate-200 mt-1 truncate">
-              Wrong Subject's Card
-            </div>
-            <div className="text-[10px] text-slate-400 font-mono truncate">
-              AUTH-MERCER-8802-L4
-            </div>
-          </button>
-
-          {/* Unregistered / Tampered Barcode */}
-          <button
-            onClick={() => {
-              const fake = 'TAMPERED-BARCODE-99';
-              setBarcodeInput(fake);
-              handleVerifyBarcode(fake);
-            }}
-            disabled={loading || !!scannedResult}
-            className="p-2.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-rose-500/50 text-left transition-all group cursor-pointer"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono text-rose-400 font-semibold">FORGED BARCODE</span>
-              <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
-            </div>
-            <div className="text-xs font-bold text-slate-200 mt-1 truncate">
-              Unrecognized ID
-            </div>
-            <div className="text-[10px] text-slate-400 font-mono truncate">
-              TAMPERED-BARCODE-99
-            </div>
-          </button>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

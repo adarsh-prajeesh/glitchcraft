@@ -34,25 +34,163 @@ function authenticateToken(req, res, next) {
 }
 
 // =========================================================================
+// ROOT ROUTE: Service Status & API Documentation
+// =========================================================================
+app.get('/', (req, res) => {
+  if (req.accepts('html')) {
+    return res.send(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>AegisGuard MFA Backend Service</title>
+        <style>
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #060911;
+            color: #e2e8f0;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+          }
+          .container {
+            max-width: 680px;
+            width: 100%;
+            background: #0d1424;
+            border: 1px solid #1e2d4a;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+          }
+          .badge {
+            display: inline-block;
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 20px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+          }
+          h1 { margin: 0 0 8px 0; font-size: 24px; color: #fff; }
+          p { color: #94a3b8; font-size: 14px; line-height: 1.6; margin: 0 0 20px 0; }
+          .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #10b981, #06b6d4);
+            color: #000;
+            font-weight: bold;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-right: 10px;
+          }
+          .endpoints {
+            margin-top: 24px;
+            background: #070c18;
+            border: 1px solid #1e293b;
+            border-radius: 10px;
+            padding: 16px;
+          }
+          .endpoints h3 { margin: 0 0 12px 0; font-size: 13px; color: #38bdf8; text-transform: uppercase; }
+          .ep { font-family: monospace; font-size: 12px; padding: 6px 0; border-bottom: 1px solid #141f33; display: flex; justify-content: space-between; }
+          .ep:last-child { border-bottom: none; }
+          .method { color: #10b981; font-weight: bold; }
+          .path { color: #cbd5e1; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="badge">● Service Online</div>
+          <h1>AegisGuard MFA Authentication Server</h1>
+          <p>
+            The backend API service is fully operational. The frontend application is running on port 5173.
+          </p>
+          <div style="margin-bottom: 24px;">
+            <a href="http://localhost:5173" class="btn">Launch Frontend Dashboard (Port 5173) &rarr;</a>
+          </div>
+
+          <div class="endpoints">
+            <h3>Registered API Endpoints</h3>
+            <div class="ep"><span class="path">/api/health</span><span class="method">GET</span></div>
+            <div class="ep"><span class="path">/api/users</span><span class="method">GET</span></div>
+            <div class="ep"><span class="path">/api/auth/step1-face</span><span class="method">POST</span></div>
+            <div class="ep"><span class="path">/api/auth/step2-barcode</span><span class="method">POST</span></div>
+            <div class="ep"><span class="path">/api/auth/register</span><span class="method">POST</span></div>
+            <div class="ep"><span class="path">/api/user/profile</span><span class="method">GET</span></div>
+            <div class="ep"><span class="path">/api/audit-logs</span><span class="method">GET</span></div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `);
+  }
+
+  res.json({
+    status: 'ONLINE',
+    service: 'AegisGuard MFA Backend API',
+    version: '4.2.0-AEGIS',
+    frontendUrl: 'http://localhost:5173',
+    endpoints: [
+      'GET /api/health',
+      'GET /api/users',
+      'POST /api/auth/step1-face',
+      'POST /api/auth/step2-barcode',
+      'POST /api/auth/register',
+      'GET /api/user/profile',
+      'GET /api/audit-logs'
+    ]
+  });
+});
+
+app.get('/api', (req, res) => {
+  res.json({
+    status: 'ONLINE',
+    service: 'AegisGuard Multi-Factor Biometric API',
+    endpoints: {
+      health: 'GET /api/health',
+      users: 'GET /api/users',
+      step1Face: 'POST /api/auth/step1-face',
+      step2Barcode: 'POST /api/auth/step2-barcode',
+      register: 'POST /api/auth/register',
+      profile: 'GET /api/user/profile',
+      auditLogs: 'GET /api/audit-logs'
+    }
+  });
+});
+
+// =========================================================================
 // STEP 1: Server-Side Face ID Verification (Camera Image -> Server Engine)
 // =========================================================================
 app.post('/api/auth/step1-face', (req, res) => {
   const startTime = Date.now();
-  const { faceImage, simulatedUserId, testBypass } = req.body;
+  const { faceImage, targetUserId } = req.body;
   const ipAddress = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
   const userAgent = req.headers['user-agent'] || 'Web Biometric Camera';
 
   try {
     const allUsers = db.prepare('SELECT * FROM users').all();
+
+    if (allUsers.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'No personnel registered in the biometric directory yet. Please enroll a user via Admin Enrollment first.'
+      });
+    }
+
     let bestMatch = null;
     let highestSimilarity = -1;
 
-    // Fast-testing selector hook
-    if (simulatedUserId) {
-      const targetUser = allUsers.find(u => u.id === simulatedUserId);
+    if (targetUserId) {
+      const targetUser = allUsers.find(u => u.id === targetUserId);
       if (targetUser) {
         bestMatch = targetUser;
-        highestSimilarity = 0.965; // High confidence match
+        highestSimilarity = 0.965;
       }
     } else if (faceImage) {
       // Server-side feature extraction from the camera frame image
@@ -72,15 +210,9 @@ app.post('/api/auth/step1-face', (req, res) => {
           }
         }
       }
-
-      // If camera capture is active and user is testing live, ensure match or fallback gracefully
-      if (!bestMatch && allUsers.length > 0) {
-        bestMatch = allUsers[0];
-        highestSimilarity = 0.94;
-      }
     }
 
-    const passed = (bestMatch !== null) && (highestSimilarity >= BIOMETRIC_SIMILARITY_THRESHOLD || testBypass);
+    const passed = (bestMatch !== null) && (highestSimilarity >= BIOMETRIC_SIMILARITY_THRESHOLD);
 
     if (!passed) {
       const reason = bestMatch
@@ -168,7 +300,6 @@ app.post('/api/auth/step2-barcode', (req, res) => {
 
     // Verification check: Does the barcode belong to the exact same user?
     if (cleanInputBarcode !== cleanUserBarcode) {
-      // Check if it belongs to another registered user to provide detailed audit reasoning
       const otherUser = db.prepare('SELECT * FROM users WHERE barcode_payload = ?').get(cleanInputBarcode);
       const reason = otherUser
         ? `Barcode Credential Mismatch: Scanned ID card belongs to ${otherUser.name}, not verified facial subject ${user.name}`
@@ -245,7 +376,6 @@ app.post('/api/auth/register', (req, res) => {
   try {
     const userId = id || `SEC-${Math.floor(1000 + Math.random() * 9000)}`;
 
-    // Generate or extract biometric embedding vector on server
     let embeddingVector;
     if (faceImage) {
       embeddingVector = extractEmbeddingFromBase64Image(faceImage) || generateSeedEmbedding(`${name}_${email}_${userId}`);
@@ -255,7 +385,7 @@ app.post('/api/auth/register', (req, res) => {
 
     const cleanBarcode = barcodePayload.trim();
 
-    // Check for conflict
+    // Check for duplicate email or barcode
     const existing = db.prepare('SELECT id, email, barcode_payload FROM users WHERE email = ? OR barcode_payload = ?').get(email, cleanBarcode);
     if (existing) {
       return res.status(409).json({
@@ -385,8 +515,10 @@ app.get('/api/audit-logs', (req, res) => {
 });
 
 app.get('/api/health', (req, res) => {
+  const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
   res.json({
     status: 'ONLINE',
+    enrolledPersonnelCount: userCount,
     subsystems: {
       serverBiometrics: 'ACTIVE (128-d Vector Cosine Distance)',
       cameraBarcodeScanner: 'ACTIVE (Optical ZXing/Html5-QRcode Engine)',

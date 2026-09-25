@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Camera, CameraOff, RefreshCw, CheckCircle2, AlertTriangle, ShieldCheck, Sparkles, User, Crosshair, Server } from 'lucide-react';
+import { Camera, CameraOff, RefreshCw, CheckCircle2, AlertTriangle, ShieldCheck, Sparkles, User, Crosshair, Server, UserPlus } from 'lucide-react';
 import { api } from '../services/api';
 import { sound } from '../services/sound';
 
-export default function FaceScanStep({ onSuccess, demoUsers = [] }) {
+export default function FaceScanStep({ onSuccess, demoUsers = [], onGoToEnrollment }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
@@ -34,7 +34,7 @@ export default function FaceScanStep({ onSuccess, demoUsers = [] }) {
       }
     } catch (err) {
       console.warn('Webcam access error:', err);
-      setCameraError('Camera access unavailable or permission not granted. You can use the enrolled subject profile selector below for instant testing.');
+      setCameraError('Camera access unavailable or permission not granted.');
       setCameraActive(false);
     }
   };
@@ -127,7 +127,7 @@ export default function FaceScanStep({ onSuccess, demoUsers = [] }) {
       ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Simulated facial mesh landmark points
+      // Facial mesh landmark tracking simulation points
       const landmarks = [
         { x: cx - 40, y: cy - 35 },
         { x: cx + 40, y: cy - 35 },
@@ -170,7 +170,7 @@ export default function FaceScanStep({ onSuccess, demoUsers = [] }) {
   };
 
   // Send camera frame to server for facial biometric analysis
-  const handlePerformScan = async (selectedUserId = null) => {
+  const handlePerformScan = async (selectedTargetUserId = null) => {
     setErrorMsg(null);
     setLoading(true);
     setScanning(true);
@@ -179,22 +179,20 @@ export default function FaceScanStep({ onSuccess, demoUsers = [] }) {
     sound.playScanPulse();
 
     try {
-      await new Promise(r => setTimeout(r, 300));
+      await new Promise(r => setTimeout(r, 250));
       setScanProgress(50);
       setServerStatus('Transmitting face image to backend server...');
       sound.playScanPulse();
 
       const faceImageBase64 = captureFrameAsBase64();
 
-      await new Promise(r => setTimeout(r, 300));
-      setScanProgress(75);
+      await new Promise(r => setTimeout(r, 250));
+      setScanProgress(80);
       setServerStatus('Server calculating vector cosine distance...');
 
-      const payload = selectedUserId
-        ? { simulatedUserId: selectedUserId }
-        : faceImageBase64
-        ? { faceImage: faceImageBase64 }
-        : { simulatedUserId: demoUsers[0]?.id || 'SEC-8801' };
+      const payload = selectedTargetUserId
+        ? { targetUserId: selectedTargetUserId }
+        : { faceImage: faceImageBase64 };
 
       // Call server-side verification endpoint
       const response = await api.verifyStep1Face(payload);
@@ -287,7 +285,7 @@ export default function FaceScanStep({ onSuccess, demoUsers = [] }) {
             </div>
             <h3 className="text-sm font-semibold text-slate-200">Camera Feed Standby</h3>
             <p className="text-xs text-slate-400 max-w-sm mt-1 mb-4 font-mono">
-              {cameraError || 'Allow camera permission for live optical scanning, or select an enrolled subject profile below to test server-side biometric verification.'}
+              {cameraError || 'Please allow webcam permission to capture and send your face to the server.'}
             </p>
             <button
               onClick={startCamera}
@@ -360,7 +358,7 @@ export default function FaceScanStep({ onSuccess, demoUsers = [] }) {
         </div>
       )}
 
-      {/* Main Trigger & Demo Profiles */}
+      {/* Main Trigger & Enrolled Directory */}
       <div className="mt-5 space-y-4">
         <button
           onClick={() => handlePerformScan()}
@@ -380,42 +378,59 @@ export default function FaceScanStep({ onSuccess, demoUsers = [] }) {
           )}
         </button>
 
-        {/* Demo Personnel Quick-Match Bar */}
+        {/* Dynamic Enrolled Personnel List */}
         <div className="pt-2 border-t border-slate-800">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
               <User className="w-3 h-3 text-cyan-400" />
-              Test Profile Selector
+              Enrolled Personnel Directory ({demoUsers.length})
             </span>
-            <span className="text-[10px] text-slate-500 font-mono">1-Click Identity Match</span>
+            {demoUsers.length > 0 && (
+              <span className="text-[10px] text-slate-500 font-mono">Select to verify</span>
+            )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            {demoUsers.map((user) => (
+          {demoUsers.length === 0 ? (
+            <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-center">
+              <p className="text-xs text-slate-400 font-mono">
+                No personnel enrolled in the biometric database yet.
+              </p>
               <button
-                key={user.id}
-                onClick={() => handlePerformScan(user.id)}
-                disabled={loading || !!matchResult}
-                className="p-2.5 rounded-lg bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-emerald-500/50 text-left transition-all group cursor-pointer"
+                onClick={onGoToEnrollment}
+                className="mt-2.5 px-3.5 py-1.5 rounded-lg bg-cyan-600/20 text-cyan-300 border border-cyan-500/40 text-xs font-mono font-medium hover:bg-cyan-600/30 transition-all inline-flex items-center gap-1.5 cursor-pointer"
               >
-                <div className="flex items-center gap-2">
-                  <img
-                    src={user.avatar_url || user.avatarUrl}
-                    alt={user.name}
-                    className="w-8 h-8 rounded-full object-cover border border-slate-700 group-hover:border-emerald-500/60"
-                  />
-                  <div className="overflow-hidden">
-                    <div className="text-xs font-semibold text-slate-200 truncate group-hover:text-emerald-300">
-                      {user.name}
-                    </div>
-                    <div className="text-[10px] text-slate-400 font-mono truncate">
-                      L{user.clearance_level || user.clearanceLevel} • {user.role.split(' ')[0]}
+                <UserPlus className="w-3.5 h-3.5" />
+                <span>Go to Admin Enrollment to Register Face & Barcode</span>
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {demoUsers.map((user) => (
+                <button
+                  key={user.id}
+                  onClick={() => handlePerformScan(user.id)}
+                  disabled={loading || !!matchResult}
+                  className="p-2.5 rounded-lg bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-emerald-500/50 text-left transition-all group cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <img
+                      src={user.avatar_url || user.avatarUrl}
+                      alt={user.name}
+                      className="w-8 h-8 rounded-full object-cover border border-slate-700 group-hover:border-emerald-500/60"
+                    />
+                    <div className="overflow-hidden">
+                      <div className="text-xs font-semibold text-slate-200 truncate group-hover:text-emerald-300">
+                        {user.name}
+                      </div>
+                      <div className="text-[10px] text-slate-400 font-mono truncate">
+                        L{user.clearance_level || user.clearanceLevel} • {user.department || user.role}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </button>
-            ))}
-          </div>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

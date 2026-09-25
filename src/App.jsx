@@ -118,6 +118,7 @@ export default function App() {
               <FaceScanStep
                 onSuccess={handleStep1Success}
                 demoUsers={demoUsers}
+                onGoToEnrollment={() => setView('enrollment')}
               />
             )}
 
