@@ -1,0 +1,2 @@
+# glitchcraft
+For hackathons
