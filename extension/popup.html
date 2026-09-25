@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CampusPass SSO Assistant</title>
+  <title>Digital Identity Wallet Assistant</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
@@ -18,8 +18,8 @@
           </svg>
         </div>
         <div>
-          <div class="brand-title">CAMPUS<span>PASS</span></div>
-          <div class="brand-sub">SSO ASSISTANT // @college.edu.in</div>
+          <div class="brand-title">IDENTITY<span>WALLET</span></div>
+          <div class="brand-sub">PROVE, DON'T EXPOSE</div>
         </div>
       </div>
 
@@ -29,15 +29,15 @@
       </div>
     </header>
 
-    <!-- Content: State 1 - Logged In User Card -->
+    <!-- Content: Logged In User & Wallet Claims -->
     <div id="view-authenticated" class="view hidden">
       <div class="user-card">
         <div class="user-main">
-          <img id="user-avatar" src="" alt="Student Avatar" class="user-avatar" />
+          <img id="user-avatar" src="" alt="User Avatar" class="user-avatar" />
           <div class="user-info">
-            <div class="user-tag" id="user-role">VERIFIED STUDENT</div>
+            <div class="user-tag" id="user-role">VERIFIED IDENTITY</div>
             <h2 id="user-name" class="user-name">Loading...</h2>
-            <p id="user-email" class="user-email">user@college.edu.in</p>
+            <p id="user-email" class="user-email">user@example.com</p>
           </div>
         </div>
 
@@ -51,47 +51,45 @@
             <span id="user-age" class="meta-value">-</span>
           </div>
         </div>
+      </div>
 
-        <div class="barcode-box">
-          <div class="barcode-label">
-            <span>BARCODE CREDENTIAL PAYLOAD</span>
-            <span id="copy-feedback" class="copy-feedback">COPIED</span>
-          </div>
-          <div class="barcode-row">
-            <code id="user-barcode" class="barcode-code">AUTH-CODE</code>
-            <button id="btn-copy-barcode" class="btn-icon" title="Copy Barcode">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-              </svg>
-            </button>
-          </div>
+      <!-- Identity Wallet Stored Claims Section -->
+      <div class="claims-section">
+        <div class="section-header">
+          <span class="section-title">VERIFIED CLAIMS ({claims.length})</span>
+        </div>
+        <div id="claims-list" class="claims-list">
+          <!-- Populated dynamically -->
         </div>
       </div>
 
-      <!-- Quick Actions -->
+      <!-- Add New Credential Form -->
+      <div class="add-claim-box">
+        <div class="section-title">ADD CREDENTIAL TO WALLET</div>
+        <div class="add-claim-form">
+          <input type="text" id="input-claim-key" placeholder="Claim Name (e.g. Passport No)" class="form-input" />
+          <input type="text" id="input-claim-val" placeholder="Claim Value (e.g. A9988771)" class="form-input" />
+          <select id="select-claim-cat" class="form-select">
+            <option value="basic">Basic Claim (Auto-Approve)</option>
+            <option value="protected">Protected Claim (Requires Video Liveness)</option>
+          </select>
+          <button id="btn-add-claim" class="btn-primary-sm">+ Add Credential</button>
+        </div>
+      </div>
+
+      <!-- Actions -->
       <div class="action-buttons">
         <button id="btn-test-portal" class="btn-primary">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-            <polyline points="15 3 21 3 21 9"/>
-            <line x1="10" y1="14" x2="21" y2="3"/>
-          </svg>
-          <span>Test Auto-Login (Library Portal)</span>
+          <span>Test Trusted Partner Site</span>
         </button>
 
         <button id="btn-logout" class="btn-secondary">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
-          </svg>
-          <span>Sign Out / Clear Session</span>
+          <span>Lock Wallet / Sign Out</span>
         </button>
       </div>
     </div>
 
-    <!-- Content: State 2 - Not Logged In -->
+    <!-- Content: Not Logged In -->
     <div id="view-unauthenticated" class="view">
       <div class="empty-state">
         <div class="empty-icon">
@@ -101,28 +99,23 @@
             <line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
         </div>
-        <h3>No Active Campus Session</h3>
-        <p>Complete Step 1 (Face ID) and Step 2 (Barcode) on the central verification gateway to activate automatic Single Sign-On across all college websites.</p>
+        <h3>Digital Wallet Locked</h3>
+        <p>Complete Face ID and Video Liveness Challenge on the identity gateway to activate your digital wallet.</p>
         
         <button id="btn-open-gateway" class="btn-primary">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-            <polyline points="10 17 15 12 10 7"/>
-            <line x1="15" y1="12" x2="3" y2="12"/>
-          </svg>
-          <span>Open CampusPass Login Gateway</span>
+          <span>Open Identity Gateway</span>
         </button>
       </div>
     </div>
 
-    <!-- Preferences & Options Section -->
+    <!-- Settings -->
     <div class="settings-section">
-      <div class="section-title">SSO BEHAVIOR SETTINGS</div>
+      <div class="section-title">SECURITY & WALLET PREFERENCES</div>
 
       <div class="setting-row">
         <div class="setting-info">
-          <div class="setting-name">Auto-Submit Login Forms</div>
-          <div class="setting-desc">Instantly submit after filling credentials</div>
+          <div class="setting-name">Auto-Approve Basic Claims</div>
+          <div class="setting-desc">Auto-fill non-protected basic claims</div>
         </div>
         <label class="switch">
           <input type="checkbox" id="toggle-auto-submit" checked>
@@ -132,8 +125,8 @@
 
       <div class="setting-row">
         <div class="setting-info">
-          <div class="setting-name">Floating Verification Toast</div>
-          <div class="setting-desc">Show notification on target websites</div>
+          <div class="setting-name">Liveness Challenge on Protected Claims</div>
+          <div class="setting-desc">Enforce video action check for sensitive claims</div>
         </div>
         <label class="switch">
           <input type="checkbox" id="toggle-show-overlay" checked>
@@ -142,11 +135,10 @@
       </div>
     </div>
 
-    <!-- Footer info -->
     <footer class="footer">
-      <span>AegisGuard MFA Engine v1.0.0</span>
+      <span>Digital Identity Layer v5.0</span>
       <span>•</span>
-      <span class="domain-tag">*.college.edu.in</span>
+      <span class="domain-tag">Prove, Don't Expose</span>
     </footer>
   </div>
 

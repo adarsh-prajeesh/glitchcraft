@@ -1,20 +1,20 @@
 import React from 'react';
-import { ScanFace, Barcode, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { Video, KeyRound, CheckCircle2 } from 'lucide-react';
 
 export default function StepWizard({ currentStep, step1Data, step2Data }) {
   const steps = [
     {
       num: 1,
-      title: 'Face ID Camera Scan',
-      subtitle: 'Server-Side Vector Analysis',
-      icon: ScanFace,
+      title: 'Face & Video Liveness Challenge',
+      subtitle: 'Randomized Action Verification',
+      icon: Video,
       passed: !!step1Data
     },
     {
       num: 2,
-      title: 'Physical ID Barcode Scan',
-      subtitle: 'Camera Optical Barcode Reader',
-      icon: Barcode,
+      title: 'Digital Identity Wallet',
+      subtitle: 'Cryptographic Proof & Claims',
+      icon: KeyRound,
       passed: !!step2Data
     }
   ];
@@ -22,10 +22,9 @@ export default function StepWizard({ currentStep, step1Data, step2Data }) {
   return (
     <div className="w-full max-w-2xl mx-auto mb-8 px-2">
       <div className="grid grid-cols-2 gap-3 sm:gap-6 relative">
-        {/* Background connector line */}
         <div className="absolute top-1/2 left-16 right-16 -translate-y-1/2 h-0.5 bg-slate-800 -z-0">
           <div
-            className="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 transition-all duration-500 ease-out"
+            className="h-full bg-gradient-to-r from-cyan-500 to-emerald-400 transition-all duration-500 ease-out"
             style={{
               width: currentStep === 1 ? '30%' : '100%'
             }}
@@ -48,7 +47,6 @@ export default function StepWizard({ currentStep, step1Data, step2Data }) {
                   : 'bg-slate-950/70 border-slate-800/80 opacity-60'
               }`}
             >
-              {/* Step Icon Badge */}
               <div
                 className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center transition-all ${
                   isPassed
@@ -65,12 +63,11 @@ export default function StepWizard({ currentStep, step1Data, step2Data }) {
                 )}
               </div>
 
-              {/* Step info */}
               <div className="text-center mt-2.5">
                 <div className="flex items-center justify-center gap-1.5">
                   <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">Step 0{step.num}</span>
-                  {isPassed && <span className="text-[9px] font-mono text-emerald-400 bg-emerald-950 px-1 rounded">MATCHED</span>}
-                  {isActive && <span className="text-[9px] font-mono text-cyan-400 bg-cyan-950 px-1 rounded animate-pulse">SCANNING</span>}
+                  {isPassed && <span className="text-[9px] font-mono text-emerald-400 bg-emerald-950 px-1 rounded">VERIFIED</span>}
+                  {isActive && <span className="text-[9px] font-mono text-cyan-400 bg-cyan-950 px-1 rounded animate-pulse">ACTIVE</span>}
                 </div>
                 <div className="text-xs sm:text-sm font-bold text-slate-100 mt-0.5 truncate">{step.title}</div>
                 <div className="text-[10px] sm:text-xs text-slate-400 font-mono hidden sm:block">{step.subtitle}</div>

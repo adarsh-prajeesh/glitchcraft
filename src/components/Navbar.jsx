@@ -16,13 +16,10 @@ export default function Navbar({ currentView, setView, authenticatedUser, onLogo
           <div>
             <div className="flex items-center gap-2">
               <span className="text-base font-bold tracking-wider text-slate-100 font-mono">CAMPUS<span className="text-cyan-400">PASS</span></span>
-              <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-cyan-950/80 text-cyan-400 border border-cyan-800/60 font-medium">
-                @college.edu.in
-              </span>
             </div>
             <p className="text-[11px] text-slate-400 font-mono tracking-tight flex items-center gap-1.5">
               <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-              Face ID & ID Card Barcode Verification
+              Face ID & Biometric Verification
             </p>
           </div>
         </div>
@@ -55,18 +52,12 @@ export default function Navbar({ currentView, setView, authenticatedUser, onLogo
             </button>
           )}
 
-          {/* Admin Portal Page Link */}
-          <button
-            onClick={() => { sound.playClick(); setView('admin'); }}
-            className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
-              currentView === 'admin'
-                ? 'bg-purple-500/20 text-purple-300 border border-purple-500/50 shadow-sm font-bold'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-            }`}
-          >
-            <UserPlus className="w-3.5 h-3.5 text-purple-400" />
-            <span>Admin Portal</span>
-          </button>
+          {currentView === 'admin' && (
+            <div className="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium bg-purple-500/20 text-purple-300 border border-purple-500/50 shadow-sm font-bold flex items-center gap-1.5">
+              <UserPlus className="w-3.5 h-3.5 text-purple-400" />
+              <span>Admin Portal</span>
+            </div>
+          )}
 
           {/* Test Badges Quick View */}
           <button

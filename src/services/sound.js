@@ -80,6 +80,10 @@ class SoundSystem {
     } catch (e) {}
   }
 
+  playFaceScanning() {
+    this.playScanPulse();
+  }
+
   // Biometric Facial Match Confirmed (High tech double chime)
   playFaceMatched() {
     if (this.muted) return;

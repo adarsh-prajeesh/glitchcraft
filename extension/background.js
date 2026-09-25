@@ -47,14 +47,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     const session = {
       user: payload.user,
       authToken: payload.authToken,
+      token: payload.authToken,
       timestamp: payload.timestamp || Date.now(),
       origin: sender.tab?.url || 'campus-portal'
     };
 
-    chrome.storage.local.set({ session }, () => {
+    chrome.storage.local.set({ session, token: payload.authToken, authToken: payload.authToken }, () => {
       updateBadge(session);
-      console.log(`[CampusPass SSO] Session saved for: ${session.user.name} (${session.user.email})`);
-      sendResponse({ success: true, user: session.user });
+      console.log(`[CampusPass SSO] Session & Token saved into extension storage for: ${session.user.name}`);
+      sendResponse({ success: true, user: session.user, token: payload.authToken });
     });
     return true; // Keep message channel open for async response
   }

@@ -3,24 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Central University Digital Library - Student Access Gateway</title>
+  <title>Central Digital Library & Identity Verifier Portal</title>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background: #0b1120;
+      background: #060911;
       color: #f1f5f9;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
     }
-
-    /* Top Nav */
     .navbar {
       background: #070c18;
       border-bottom: 1px solid #1e293b;
@@ -29,355 +22,111 @@
       align-items: center;
       justify-content: space-between;
     }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
+    .brand { display: flex; align-items: center; gap: 12px; }
     .brand-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 8px;
-      background: rgba(14, 165, 233, 0.15);
-      border: 1px solid rgba(14, 165, 233, 0.4);
-      color: #38bdf8;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      width: 36px; height: 36px; border-radius: 8px;
+      background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #10b981; display: flex; align-items: center; justify-content: center;
     }
-
-    .brand h1 {
-      font-size: 16px;
-      font-weight: 700;
-      color: #ffffff;
-      letter-spacing: -0.2px;
-    }
-
-    .brand p {
-      font-size: 11px;
-      color: #94a3b8;
-      font-family: monospace;
-    }
-
+    .brand h1 { font-size: 16px; font-weight: 700; color: #ffffff; }
+    .brand p { font-size: 11px; color: #94a3b8; font-family: monospace; }
     .nav-badge {
-      font-size: 11px;
-      font-family: monospace;
-      color: #38bdf8;
-      background: rgba(14, 165, 233, 0.1);
-      border: 1px solid rgba(14, 165, 233, 0.3);
-      padding: 4px 10px;
-      border-radius: 6px;
+      font-size: 11px; font-family: monospace; color: #10b981;
+      background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 4px 10px; border-radius: 6px;
     }
-
-    /* Main Container */
     .main-content {
-      flex: 1;
-      max-width: 900px;
-      width: 100%;
-      margin: 40px auto;
-      padding: 0 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      flex: 1; max-width: 800px; width: 100%; margin: 40px auto; padding: 0 20px;
+      display: flex; flex-direction: column; align-items: center;
     }
-
     .login-container {
-      width: 100%;
-      max-width: 440px;
-      background: #0f172a;
-      border: 1px solid #334155;
-      border-radius: 16px;
-      padding: 32px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      width: 100%; max-width: 480px; background: #0f172a; border: 1px solid #334155;
+      border-radius: 16px; padding: 32px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
     }
-
-    .login-header {
-      text-align: center;
-      margin-bottom: 24px;
-    }
-
-    .login-header h2 {
-      font-size: 20px;
-      font-weight: 700;
-      color: #ffffff;
-      margin-bottom: 6px;
-    }
-
-    .login-header p {
-      font-size: 13px;
-      color: #94a3b8;
-    }
-
+    .login-header { text-align: center; margin-bottom: 24px; }
+    .login-header h2 { font-size: 20px; font-weight: 700; color: #ffffff; margin-bottom: 6px; }
+    .login-header p { font-size: 13px; color: #94a3b8; }
     .sso-badge-banner {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 8px 12px;
-      border-radius: 8px;
-      background: rgba(6, 182, 212, 0.1);
-      border: 1px solid rgba(6, 182, 212, 0.3);
-      color: #06b6d4;
-      font-size: 11px;
-      font-family: monospace;
-      margin-bottom: 20px;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 8px 12px; border-radius: 8px; background: rgba(6, 182, 212, 0.1);
+      border: 1px solid rgba(6, 182, 212, 0.3); color: #06b6d4; font-size: 11px;
+      font-family: monospace; margin-bottom: 20px;
     }
-
-    .sso-badge-banner svg {
-      color: #10b981;
-    }
-
-    .form-group {
-      margin-bottom: 18px;
-    }
-
+    .form-group { margin-bottom: 18px; }
     .form-label {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      color: #cbd5e1;
-      margin-bottom: 6px;
-      text-transform: uppercase;
-      font-family: monospace;
-      letter-spacing: 0.5px;
+      display: block; font-size: 12px; font-weight: 600; color: #cbd5e1;
+      margin-bottom: 6px; text-transform: uppercase; font-family: monospace;
     }
-
     .form-input {
-      width: 100%;
-      padding: 10px 14px;
-      background: #020617;
-      border: 1px solid #334155;
-      border-radius: 10px;
-      color: #ffffff;
-      font-size: 13px;
-      font-family: monospace;
-      transition: all 0.2s ease;
+      width: 100%; padding: 10px 14px; background: #020617; border: 1px solid #334155;
+      border-radius: 10px; color: #ffffff; font-size: 13px; font-family: monospace;
     }
-
-    .form-input:focus {
-      outline: none;
-      border-color: #38bdf8;
-      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
-    }
-
     .btn-submit {
-      width: 100%;
-      padding: 12px;
-      background: linear-gradient(135deg, #0284c7, #2563eb);
-      color: #ffffff;
-      font-weight: 700;
-      font-size: 14px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
-      margin-top: 8px;
+      width: 100%; padding: 12px; background: linear-gradient(135deg, #10b981, #06b6d4);
+      color: #030712; font-weight: 700; font-size: 14px; border: none;
+      border-radius: 10px; cursor: pointer; margin-top: 8px;
     }
-
-    .btn-submit:hover {
-      background: linear-gradient(135deg, #0369a1, #1d4ed8);
-      transform: translateY(-1px);
-    }
-
-    /* Success Screen */
-    .dashboard-view {
-      display: none;
-      width: 100%;
-      animation: fadeIn 0.4s ease;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .card {
-      background: #0f172a;
-      border: 1px solid #1e293b;
-      border-radius: 16px;
-      padding: 28px;
-      margin-bottom: 24px;
-    }
-
-    .card-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 20px;
-      padding-bottom: 14px;
-      border-bottom: 1px solid #1e293b;
-    }
-
-    .user-pill {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .user-avatar {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      border: 2px solid #10b981;
-      object-fit: cover;
-    }
-
-    .resource-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 16px;
-    }
-
-    .resource-item {
-      background: #020617;
-      border: 1px solid #1e293b;
-      border-radius: 12px;
-      padding: 16px;
-      transition: all 0.2s ease;
-    }
-
-    .resource-item:hover {
-      border-color: #38bdf8;
-      transform: translateY(-2px);
-    }
-
-    .resource-item h4 {
-      font-size: 14px;
-      color: #f1f5f9;
-      margin-bottom: 4px;
-    }
-
-    .resource-item p {
-      font-size: 12px;
-      color: #94a3b8;
-    }
-
-    .badge-clearance {
-      display: inline-block;
-      font-size: 10px;
-      font-family: monospace;
-      font-weight: 700;
-      color: #10b981;
-      background: rgba(16, 185, 129, 0.1);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      padding: 2px 6px;
-      border-radius: 4px;
-      margin-top: 8px;
-    }
+    .dashboard-view { display: none; width: 100%; }
+    .card { background: #0f172a; border: 1px solid #1e293b; border-radius: 16px; padding: 28px; }
   </style>
 </head>
 <body>
-  <!-- Header -->
   <nav class="navbar">
     <div class="brand">
       <div class="brand-icon">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
-          <path d="M6 6h10"/>
-          <path d="M6 10h10"/>
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
         </svg>
       </div>
       <div>
-        <h1>Central University Digital Library</h1>
-        <p>PARTNER SERVICE • ACADEMIC REPOSITORY</p>
+        <h1>Central Digital Library & Academic Verifier</h1>
+        <p>PARTNER SERVICE • TRUSTED IDENTITY VERIFIER</p>
       </div>
     </div>
     <div class="nav-badge">
-      SSO Enabled via CampusPass
+      Cryptographic Proof Enabled
     </div>
   </nav>
 
-  <!-- Main Content -->
   <main class="main-content">
-    <!-- State 1: Login Form (Target of Chrome Extension Auto-Fill & Auto-Sign-In) -->
     <div id="login-section" class="login-container">
       <div class="login-header">
-        <h2>Student Library Sign In</h2>
-        <p>Access IEEE, ACM, Springer journals and textbooks.</p>
+        <h2>Digital Identity Verifier Login</h2>
+        <p>Prove identity claims without exposing raw credentials.</p>
       </div>
 
       <div class="sso-badge-banner">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-          <path d="m9 12 2 2 4-4"/>
-        </svg>
-        <span>CampusPass Chrome Extension Auto-Sign-In Ready</span>
+        <span>Digital Identity Wallet Auto-Proof Ready</span>
       </div>
 
       <form id="library-login-form">
         <div class="form-group">
-          <label class="form-label" for="student_email">Student Email / ID</label>
-          <input
-            type="email"
-            id="student_email"
-            name="student_email"
-            class="form-input"
-            placeholder="e.g. rahul.sharma@college.edu.in"
-            required
-            autocomplete="username"
-          />
+          <label class="form-label" for="student_email">Basic Claim: Email / ID</label>
+          <input type="email" id="student_email" name="student_email" class="form-input" placeholder="e.g. rahul@example.com" required />
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="barcode_passkey">ID Card Barcode Payload / Passkey</label>
-          <input
-            type="password"
-            id="barcode_passkey"
-            name="barcode_passkey"
-            class="form-input"
-            placeholder="e.g. COL-CSE-2026-8801"
-            required
-            autocomplete="current-password"
-          />
+          <label class="form-label" for="gov_ssn">Protected Claim: National SSN / Gov ID</label>
+          <input type="password" id="gov_ssn" name="gov_ssn" class="form-input" placeholder="Triggers Video Action Challenge" required />
         </div>
 
         <button type="submit" id="btn-submit-library" class="btn-submit">
-          Sign In to Library Portal
+          Verify Proof & Access Portal
         </button>
       </form>
     </div>
 
-    <!-- State 2: Authenticated Library Dashboard -->
     <div id="dashboard-section" class="dashboard-view">
       <div class="card">
-        <div class="card-header">
-          <div class="user-pill">
-            <img id="dash-avatar" src="" alt="Avatar" class="user-avatar" />
-            <div>
-              <h3 id="dash-name" style="font-size: 18px; color: #fff;">Student</h3>
-              <p id="dash-email" style="font-size: 12px; color: #94a3b8; font-family: monospace;">user@college.edu.in</p>
-            </div>
-          </div>
-          <button id="btn-library-logout" style="background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;">
-            Sign Out
-          </button>
+        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 14px; margin-bottom: 20px; font-size: 13px; color: #34d399; font-family: monospace;">
+          ✓ Cryptographic Proof Verified: Access Granted via Digital Identity Wallet!
         </div>
+        <h3 id="dash-name" style="font-size: 18px; color: #fff; margin-bottom: 6px;">Verified Student</h3>
+        <p id="dash-email" style="font-size: 12px; color: #94a3b8; font-family: monospace; margin-bottom: 20px;">user@example.com</p>
 
-        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 12px; margin-bottom: 20px; font-size: 12px; color: #34d399; font-family: monospace;">
-          ✓ Single Sign-On Success: Authenticated via CampusPass Chrome Extension!
-        </div>
-
-        <h3 style="font-size: 14px; text-transform: uppercase; color: #94a3b8; font-family: monospace; margin-bottom: 12px;">Available Digital Repositories</h3>
-        <div class="resource-grid">
-          <div class="resource-item">
-            <h4>IEEE Xplore Digital Library</h4>
-            <p>Full access to computer science and electrical engineering journals.</p>
-            <span class="badge-clearance">CAMPUS PASS UNLOCKED</span>
-          </div>
-          <div class="resource-item">
-            <h4>ACM Digital Library</h4>
-            <p>Peer-reviewed conference proceedings and computing surveys.</p>
-            <span class="badge-clearance">CAMPUS PASS UNLOCKED</span>
-          </div>
-          <div class="resource-item">
-            <h4>ScienceDirect / Elsevier</h4>
-            <p>Scientific, technical, and medical research database.</p>
-            <span class="badge-clearance">CAMPUS PASS UNLOCKED</span>
-          </div>
-        </div>
+        <button id="btn-library-logout" style="background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 8px 16px; border-radius: 8px; font-size: 12px; cursor: pointer;">
+          Sign Out
+        </button>
       </div>
     </div>
   </main>
@@ -387,7 +136,6 @@
     const loginSection = document.getElementById('login-section');
     const dashboardSection = document.getElementById('dashboard-section');
 
-    const dashAvatar = document.getElementById('dash-avatar');
     const dashName = document.getElementById('dash-name');
     const dashEmail = document.getElementById('dash-email');
     const btnLogout = document.getElementById('btn-library-logout');
@@ -395,15 +143,11 @@
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const email = document.getElementById('student_email').value;
-      const passkey = document.getElementById('barcode_passkey').value;
-
-      // Extract username from email
       const namePart = email.split('@')[0].replace(/\./g, ' ');
       const displayName = namePart.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 
-      dashName.textContent = displayName || 'Verified Student';
+      dashName.textContent = displayName || 'Verified Identity';
       dashEmail.textContent = email;
-      dashAvatar.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80';
 
       loginSection.style.display = 'none';
       dashboardSection.style.display = 'block';

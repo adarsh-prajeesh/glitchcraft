@@ -1,33 +1,78 @@
 /**
- * API Client for AegisGuard MFA Backend
- * Sequential Face ID Biometrics & ID Card Barcode Authentication
+ * API Client for Digital Identity Wallet & Cryptographic Proof Engine
  */
 
 const API_BASE = '/api';
 
 export const api = {
-  // Step 1: Face ID Scan (Sends camera image to server-side recognition engine)
-  async verifyStep1Face({ faceImage, simulatedUserId, targetUserId, testBypass }) {
+  // Face ID & Randomized Video Liveness Action Challenge
+  async verifyStep1Face({ faceImage, targetUserId, performedAction, challengeType }) {
     const res = await fetch(`${API_BASE}/auth/step1-face`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ faceImage, targetUserId: targetUserId || simulatedUserId, testBypass })
+      body: JSON.stringify({ faceImage, targetUserId, performedAction, challengeType })
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Server-side facial verification failed');
+    if (!res.ok) throw new Error(data.error || 'Facial & Liveness verification failed');
     return data;
   },
 
-  // Step 2: ID Card Barcode Scan
-  async verifyStep2Barcode({ step1Token, barcodePayload }) {
-    const res = await fetch(`${API_BASE}/auth/step2-barcode`, {
+  // Wallet Identity Claims
+  async getClaims(userId) {
+    const res = await fetch(`${API_BASE}/wallet/claims${userId ? `?userId=${userId}` : ''}`);
+    if (!res.ok) throw new Error('Failed to fetch wallet claims');
+    return res.json();
+  },
+
+  async addClaim({ userId, claimKey, claimValue, category }) {
+    const res = await fetch(`${API_BASE}/wallet/claims`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ step1Token, barcodePayload })
+      body: JSON.stringify({ userId, claimKey, claimValue, category })
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Physical ID barcode scan verification failed');
+    if (!res.ok) throw new Error(data.error || 'Failed to add claim');
     return data;
+  },
+
+  // Cryptographic Proof Generation
+  async generateProof({ targetDomain, claimsToProve, userId }) {
+    const res = await fetch(`${API_BASE}/auth/proof`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ targetDomain, claimsToProve, userId })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Proof generation failed');
+    return data;
+  },
+
+  // Verifier Cryptographic Proof Verification
+  async verifyProof(proof) {
+    const res = await fetch(`${API_BASE}/verifier/verify-proof`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ proof })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Proof verification failed');
+    return data;
+  },
+
+  // Trusted Websites
+  async getTrustedSites() {
+    const res = await fetch(`${API_BASE}/trusted-sites`);
+    if (!res.ok) throw new Error('Failed to load trusted websites');
+    return res.json();
+  },
+
+  async checkSiteTrust(domain) {
+    const res = await fetch(`${API_BASE}/trusted-sites/check`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ domain })
+    });
+    return res.json();
   },
 
   // User Profile
@@ -40,26 +85,21 @@ export const api = {
     return data;
   },
 
-  // Recalibrate / Update Face Embedding on Server
-  async updateFace(token, faceImage) {
-    const res = await fetch(`${API_BASE}/user/update-face`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({ faceImage })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to update biometric template');
-    return data;
-  },
-
   // Directory of Personnel
   async getUsers() {
     const res = await fetch(`${API_BASE}/users`);
     if (!res.ok) throw new Error('Failed to load user directory');
     return res.json();
+  },
+
+  // Delete / Remove Personnel from Directory
+  async deleteUser(userId) {
+    const res = await fetch(`${API_BASE}/users/${userId}`, {
+      method: 'DELETE'
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to delete user');
+    return data;
   },
 
   // Security Audit Logs

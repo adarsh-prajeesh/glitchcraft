@@ -2,28 +2,24 @@ import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import StepWizard from './components/StepWizard';
 import FaceScanStep from './components/FaceScanStep';
-import BarcodeScanStep from './components/BarcodeScanStep';
 import Dashboard from './components/Dashboard';
 import AdminEnrollment from './components/AdminEnrollment';
-import BadgeModal from './components/BadgeModal';
 import { api } from './services/api';
 import { sound } from './services/sound';
-import { GraduationCap, Sparkles } from 'lucide-react';
+import { ShieldCheck, Video, Key } from 'lucide-react';
 
 export default function App() {
-  // Support path routing for /admin if entered directly
   const initialView = window.location.pathname === '/admin' || window.location.hash === '#admin' ? 'admin' : 'auth';
 
   const [currentView, setView] = useState(initialView); // 'auth' | 'dashboard' | 'admin'
-  const [authStep, setAuthStep] = useState(1); // 1: Face ID, 2: Barcode
+  const [authStep, setAuthStep] = useState(1);
   const [step1Data, setStep1Data] = useState(null);
   const [authenticatedUser, setAuthenticatedUser] = useState(null);
   const [authToken, setAuthToken] = useState(null);
   const [demoUsers, setDemoUsers] = useState([]);
   const [soundMuted, setSoundMuted] = useState(false);
-  const [badgesModalOpen, setBadgesModalOpen] = useState(false);
 
-  // Sync view changes to URL hash/history
+  // Sync view changes to URL history
   const handleSetView = (view) => {
     setView(view);
     if (view === 'admin') {
@@ -35,20 +31,19 @@ export default function App() {
     }
   };
 
-  // Load enrolled students on mount
+  // Load enrolled identity directory
   const fetchUsers = async () => {
     try {
       const users = await api.getUsers();
       setDemoUsers(users);
     } catch (e) {
-      console.error('Failed to load students:', e);
+      console.error('Failed to load identity directory:', e);
     }
   };
 
   useEffect(() => {
     fetchUsers();
 
-    // Listen to browser forward/back buttons
     const handlePopState = () => {
       if (window.location.pathname === '/admin' || window.location.hash === '#admin') {
         setView('admin');
@@ -69,22 +64,18 @@ export default function App() {
     setSoundMuted(nextMuted);
   };
 
-  // Step 1 Success Handler (Face verified on server)
+  // Face + Video Liveness Challenge Success Handler
   const handleStep1Success = (data) => {
     setStep1Data(data);
-    setAuthStep(2); // Advance to Step 2: Barcode
-  };
-
-  // Step 2 Success Handler (Barcode verified on server)
-  const handleStep2Success = (data) => {
     setAuthToken(data.authToken);
     setAuthenticatedUser(data.user);
     handleSetView('dashboard');
 
-    // Broadcast authenticated session to CampusPass Chrome Extension SSO Assistant
+    // Broadcast authenticated session to Chrome Extension Identity Wallet
     const sessionPayload = {
       user: data.user,
       authToken: data.authToken,
+      claims: data.claims || [],
       timestamp: Date.now()
     };
     try {
@@ -96,7 +87,7 @@ export default function App() {
     }
   };
 
-  // Logout
+  // Logout / Lock Wallet
   const handleLogout = () => {
     setAuthToken(null);
     setAuthenticatedUser(null);
@@ -112,16 +103,9 @@ export default function App() {
     } catch (e) {}
   };
 
-  // Back from Barcode to Face
-  const handleBackToFace = () => {
-    setStep1Data(null);
-    setAuthStep(1);
-    sound.playClick();
-  };
-
   return (
     <div className="min-h-screen bg-[#060911] text-slate-100 flex flex-col font-sans selection:bg-cyan-500 selection:text-black">
-      {/* Top Navigation */}
+      {/* Top Navigation Header */}
       <Navbar
         currentView={currentView}
         setView={handleSetView}
@@ -129,25 +113,23 @@ export default function App() {
         onLogout={handleLogout}
         soundMuted={soundMuted}
         toggleSound={toggleSound}
-        onOpenBadges={() => setBadgesModalOpen(true)}
       />
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col justify-center">
-        {/* VIEW 1: Multi-Factor Authentication Gate */}
+        {/* VIEW 1: Face ID & Video Liveness Gateway */}
         {currentView === 'auth' && (
           <div className="w-full animate-fade-in">
-            {/* Campus Login Header */}
             <div className="text-center mb-8">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-500/40 text-cyan-400 text-xs font-mono mb-3">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-cyan-950/80 border border-cyan-500/40 text-cyan-400 text-xs font-mono mb-3 shadow-md">
                 <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-                <span>COLLEGE CAMPUS SMART VERIFICATION GATE</span>
+                <span>DIGITAL IDENTITY WALLET GATEWAY</span>
               </div>
               <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
-                Student Biometric & ID Login
+                Biometric & Video Liveness Verification
               </h1>
               <p className="mt-2 text-sm text-slate-400 max-w-xl mx-auto font-mono">
-                Sequential authentication: Step 1 verifies student facial biometric with the server, Step 2 verifies the physical ID card barcode.
+                Verify your identity once with facial biometric matching and a randomized video challenge. Securely reuse identity claims across trusted websites.
               </p>
             </div>
 
@@ -158,28 +140,15 @@ export default function App() {
               step2Data={authenticatedUser}
             />
 
-            {/* Step 1: Face ID */}
-            {authStep === 1 && (
-              <FaceScanStep
-                onSuccess={handleStep1Success}
-                demoUsers={demoUsers}
-                onGoToEnrollment={() => handleSetView('admin')}
-              />
-            )}
-
-            {/* Step 2: Barcode */}
-            {authStep === 2 && (
-              <BarcodeScanStep
-                step1Data={step1Data}
-                onSuccess={handleStep2Success}
-                onBack={handleBackToFace}
-                onOpenBadges={() => setBadgesModalOpen(true)}
-              />
-            )}
+            {/* Face ID & Liveness Challenge */}
+            <FaceScanStep
+              onSuccess={handleStep1Success}
+              demoUsers={demoUsers}
+            />
           </div>
         )}
 
-        {/* VIEW 2: Student Dashboard */}
+        {/* VIEW 2: Digital Identity Wallet Dashboard */}
         {currentView === 'dashboard' && (
           <div className="w-full animate-fade-in">
             <Dashboard
@@ -194,28 +163,20 @@ export default function App() {
           <div className="w-full animate-fade-in">
             <AdminEnrollment
               onBackToGateway={() => handleSetView('auth')}
-              onOpenBadges={() => setBadgesModalOpen(true)}
             />
           </div>
         )}
       </main>
 
-      {/* Printable ID Badges Modal */}
-      <BadgeModal
-        isOpen={badgesModalOpen}
-        onClose={() => setBadgesModalOpen(false)}
-        users={demoUsers}
-      />
-
-      {/* College Campus Footer */}
+      {/* Footer */}
       <footer className="border-t border-slate-900 bg-[#04060c] py-4 px-6 text-center text-xs font-mono text-slate-500">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
-            <span>CAMPUS MFA SYSTEM // DOMAIN: @college.edu.in</span>
+            <span>DIGITAL IDENTITY WALLET LAYER // PROVE, DON'T EXPOSE</span>
           </div>
           <div>
-            College Student Identification & Biometric Verification
+            Browser-Based Identity Verification & Cryptographic Proof Engine
           </div>
         </div>
       </footer>
