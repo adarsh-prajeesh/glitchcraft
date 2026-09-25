@@ -67,7 +67,7 @@ app.get('/', (req, res) => {
           .badge {
             display: inline-block;
             background: rgba(16, 185, 129, 0.15);
-            color: #10b981;
+            color: #37dfa7ff;
             border: 1px solid rgba(16, 185, 129, 0.4);
             font-size: 11px;
             font-weight: 700;

@@ -8,18 +8,17 @@ const dbPath = path.join(__dirname, 'aegis_mfa.db');
 
 export const db = new Database(dbPath);
 
-// Enable WAL mode for high performance
+// Enable WAL mode for fast concurrency
 db.pragma('journal_mode = WAL');
 
-// Initialize database schema (Clean tables with NO dummy accounts)
+// College Student & Member Database Schema
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
-    role TEXT NOT NULL,
-    department TEXT NOT NULL,
-    clearance_level INTEGER NOT NULL DEFAULT 1,
+    course TEXT NOT NULL,
+    age INTEGER NOT NULL,
     face_embedding TEXT NOT NULL,
     reference_photo TEXT,
     barcode_payload TEXT UNIQUE NOT NULL,
@@ -51,4 +50,4 @@ db.exec(`
   );
 `);
 
-console.log('[DB] Database initialized with clean schema (Zero dummy accounts). Ready for live enrollment.');
+console.log('[DB] College Database initialized (clean schema: name, course, age, @college.edu.in).');

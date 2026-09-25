@@ -8,10 +8,13 @@ import AdminEnrollment from './components/AdminEnrollment';
 import BadgeModal from './components/BadgeModal';
 import { api } from './services/api';
 import { sound } from './services/sound';
-import { Shield, Lock, Terminal, Sparkles, RefreshCw } from 'lucide-react';
+import { GraduationCap, Sparkles } from 'lucide-react';
 
 export default function App() {
-  const [currentView, setView] = useState('auth'); // 'auth' | 'dashboard' | 'enrollment'
+  // Support path routing for /admin if entered directly
+  const initialView = window.location.pathname === '/admin' || window.location.hash === '#admin' ? 'admin' : 'auth';
+
+  const [currentView, setView] = useState(initialView); // 'auth' | 'dashboard' | 'admin'
   const [authStep, setAuthStep] = useState(1); // 1: Face ID, 2: Barcode
   const [step1Data, setStep1Data] = useState(null);
   const [authenticatedUser, setAuthenticatedUser] = useState(null);
@@ -19,23 +22,45 @@ export default function App() {
   const [demoUsers, setDemoUsers] = useState([]);
   const [soundMuted, setSoundMuted] = useState(false);
   const [badgesModalOpen, setBadgesModalOpen] = useState(false);
-  const [loadingUsers, setLoadingUsers] = useState(true);
 
-  // Load registered users on mount
+  // Sync view changes to URL hash/history
+  const handleSetView = (view) => {
+    setView(view);
+    if (view === 'admin') {
+      window.history.replaceState(null, '', '/admin');
+    } else if (view === 'dashboard') {
+      window.history.replaceState(null, '', '/dashboard');
+    } else {
+      window.history.replaceState(null, '', '/');
+    }
+  };
+
+  // Load enrolled students on mount
   const fetchUsers = async () => {
     try {
-      setLoadingUsers(true);
       const users = await api.getUsers();
       setDemoUsers(users);
     } catch (e) {
-      console.error('Failed to load users:', e);
-    } finally {
-      setLoadingUsers(false);
+      console.error('Failed to load students:', e);
     }
   };
 
   useEffect(() => {
     fetchUsers();
+
+    // Listen to browser forward/back buttons
+    const handlePopState = () => {
+      if (window.location.pathname === '/admin' || window.location.hash === '#admin') {
+        setView('admin');
+      } else if (window.location.pathname === '/dashboard') {
+        setView('dashboard');
+      } else {
+        setView('auth');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
   const toggleSound = () => {
@@ -44,26 +69,26 @@ export default function App() {
     setSoundMuted(nextMuted);
   };
 
-  // Step 1 Success Handler (Face Biometric verified on server)
+  // Step 1 Success Handler (Face verified on server)
   const handleStep1Success = (data) => {
     setStep1Data(data);
     setAuthStep(2); // Advance to Step 2: Barcode
   };
 
-  // Step 2 Success Handler (ID Barcode verified against same user)
+  // Step 2 Success Handler (Barcode verified on server)
   const handleStep2Success = (data) => {
     setAuthToken(data.authToken);
     setAuthenticatedUser(data.user);
-    setView('dashboard');
+    handleSetView('dashboard');
   };
 
-  // Logout / Terminate Session
+  // Logout
   const handleLogout = () => {
     setAuthToken(null);
     setAuthenticatedUser(null);
     setStep1Data(null);
     setAuthStep(1);
-    setView('auth');
+    handleSetView('auth');
     sound.playAccessDenied();
   };
 
@@ -75,11 +100,11 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#060911] text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-black">
+    <div className="min-h-screen bg-[#060911] text-slate-100 flex flex-col font-sans selection:bg-cyan-500 selection:text-black">
       {/* Top Navigation */}
       <Navbar
         currentView={currentView}
-        setView={setView}
+        setView={handleSetView}
         authenticatedUser={authenticatedUser}
         onLogout={handleLogout}
         soundMuted={soundMuted}
@@ -92,17 +117,17 @@ export default function App() {
         {/* VIEW 1: Multi-Factor Authentication Gate */}
         {currentView === 'auth' && (
           <div className="w-full animate-fade-in">
-            {/* Mission Hero Header */}
+            {/* Campus Login Header */}
             <div className="text-center mb-8">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 text-xs font-mono mb-3">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>SEQUENTIAL 2-FACTOR BIOMETRIC & OPTICAL GATE</span>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-500/40 text-cyan-400 text-xs font-mono mb-3">
+                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                <span>COLLEGE CAMPUS SMART VERIFICATION GATE</span>
               </div>
               <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
-                AegisGuard Security Gateway
+                Student Biometric & ID Login
               </h1>
               <p className="mt-2 text-sm text-slate-400 max-w-xl mx-auto font-mono">
-                Access is granted ONLY when both facial biometrics and the physical ID card barcode match the exact same registered personnel profile.
+                Sequential authentication: Step 1 verifies student facial biometric with the server, Step 2 verifies the physical ID card barcode.
               </p>
             </div>
 
@@ -113,15 +138,16 @@ export default function App() {
               step2Data={authenticatedUser}
             />
 
-            {/* Sequential Step Component */}
+            {/* Step 1: Face ID */}
             {authStep === 1 && (
               <FaceScanStep
                 onSuccess={handleStep1Success}
                 demoUsers={demoUsers}
-                onGoToEnrollment={() => setView('enrollment')}
+                onGoToEnrollment={() => handleSetView('admin')}
               />
             )}
 
+            {/* Step 2: Barcode */}
             {authStep === 2 && (
               <BarcodeScanStep
                 step1Data={step1Data}
@@ -133,23 +159,21 @@ export default function App() {
           </div>
         )}
 
-        {/* VIEW 2: Secured User Dashboard */}
+        {/* VIEW 2: Student Dashboard */}
         {currentView === 'dashboard' && (
           <div className="w-full animate-fade-in">
             <Dashboard
               user={authenticatedUser}
-              authToken={authToken}
               onLogout={handleLogout}
-              onOpenBadges={() => setBadgesModalOpen(true)}
             />
           </div>
         )}
 
-        {/* VIEW 3: Admin Enrollment Console */}
-        {currentView === 'enrollment' && (
+        {/* VIEW 3: Dedicated Admin Portal Page */}
+        {currentView === 'admin' && (
           <div className="w-full animate-fade-in">
             <AdminEnrollment
-              onUserEnrolled={fetchUsers}
+              onBackToGateway={() => handleSetView('auth')}
               onOpenBadges={() => setBadgesModalOpen(true)}
             />
           </div>
@@ -163,15 +187,15 @@ export default function App() {
         users={demoUsers}
       />
 
-      {/* High-Tech Cyber Footer */}
+      {/* College Campus Footer */}
       <footer className="border-t border-slate-900 bg-[#04060c] py-4 px-6 text-center text-xs font-mono text-slate-500">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-            <span>SYSTEM INTEGRITY: VERIFIED (SQLite WAL // 128-D VECTOR ENGINE)</span>
+            <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
+            <span>CAMPUS MFA SYSTEM // DOMAIN: @college.edu.in</span>
           </div>
           <div>
-            AegisGuard Defense Systems • All Biometrics Processed Ephemerally on Secure Host
+            College Student Identification & Biometric Verification
           </div>
         </div>
       </footer>

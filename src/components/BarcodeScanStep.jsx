@@ -162,7 +162,7 @@ export default function BarcodeScanStep({ step1Data, onSuccess, onBack, onOpenBa
               </span>
             </div>
             <p className="text-xs text-slate-400 font-mono">
-              ID: {targetUser?.id} • Clearance L{targetUser?.clearanceLevel} • {targetUser?.department}
+              ID: {targetUser?.id} • {targetUser?.course} • Age: {targetUser?.age}
             </p>
           </div>
         </div>
@@ -233,7 +233,7 @@ export default function BarcodeScanStep({ step1Data, onSuccess, onBack, onOpenBa
               Welcome, {targetUser?.name}
             </h3>
             <p className="text-xs text-emerald-300 font-mono mt-0.5">
-              Face ID & ID Barcode matched • Security Clearance Level {targetUser?.clearanceLevel}
+              Face ID & ID Barcode matched • {targetUser?.course}
             </p>
             <div className="mt-3 px-3 py-1 rounded bg-emerald-900/60 border border-emerald-500/40 text-xs font-mono text-emerald-200">
               Payload: {scannedResult}

@@ -329,7 +329,7 @@ export default function FaceScanStep({ onSuccess, demoUsers = [], onGoToEnrollme
               {matchResult.matchedUser.name}
             </h3>
             <p className="text-xs text-emerald-300 font-mono mt-0.5">
-              {matchResult.matchedUser.department} • Clearance Level {matchResult.matchedUser.clearanceLevel}
+              {matchResult.matchedUser.course} • Age: {matchResult.matchedUser.age}
             </p>
             <div className="mt-3 px-3 py-1 rounded bg-emerald-900/60 border border-emerald-500/40 text-xs font-mono text-emerald-200">
               Vector Confidence: {matchResult.confidencePercent}% (Threshold: 75%)
@@ -423,7 +423,7 @@ export default function FaceScanStep({ onSuccess, demoUsers = [], onGoToEnrollme
                         {user.name}
                       </div>
                       <div className="text-[10px] text-slate-400 font-mono truncate">
-                        L{user.clearance_level || user.clearanceLevel} • {user.department || user.role}
+                        {user.course} • Age: {user.age}
                       </div>
                     </div>
                   </div>
