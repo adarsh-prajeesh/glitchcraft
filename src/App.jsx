@@ -17,7 +17,6 @@ export default function App() {
   const [authenticatedUser, setAuthenticatedUser] = useState(null);
   const [authToken, setAuthToken] = useState(null);
   const [demoUsers, setDemoUsers] = useState([]);
-  const [soundMuted, setSoundMuted] = useState(false);
 
   // Sync view changes to URL history
   const handleSetView = (view) => {
@@ -44,6 +43,28 @@ export default function App() {
   useEffect(() => {
     fetchUsers();
 
+    // Check URL parameters, Cookies, or localStorage for session_id auto-login
+    const urlParams = new URLSearchParams(window.location.search);
+    const cookieMatch = document.cookie.match(/campuspass_session_id=([^;]+)/) || document.cookie.match(/campuspass_user_id=([^;]+)/);
+    const sessionIdFromCookie = cookieMatch ? cookieMatch[1] : null;
+
+    const sessionIdParam = urlParams.get('session_id') || urlParams.get('session') || urlParams.get('token') || sessionIdFromCookie || localStorage.getItem('campuspass_session_id');
+
+    if (sessionIdParam) {
+      api.loginWithSessionId(sessionIdParam)
+        .then((res) => {
+          if (res.success && res.user) {
+            handleStep1Success(res);
+            localStorage.setItem('campuspass_session_id', res.user.id);
+            document.cookie = `campuspass_session_id=${res.user.id}; path=/; max-age=31536000; SameSite=Lax`;
+            document.cookie = `campuspass_user_id=${res.user.id}; path=/; max-age=31536000; SameSite=Lax`;
+          }
+        })
+        .catch((err) => {
+          console.warn('Session auto-login notice:', err.message);
+        });
+    }
+
     const handlePopState = () => {
       if (window.location.pathname === '/admin' || window.location.hash === '#admin') {
         setView('admin');
@@ -58,18 +79,18 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  const toggleSound = () => {
-    const nextMuted = !soundMuted;
-    sound.setMuted(nextMuted);
-    setSoundMuted(nextMuted);
-  };
-
   // Face + Video Liveness Challenge Success Handler
   const handleStep1Success = (data) => {
     setStep1Data(data);
     setAuthToken(data.authToken);
     setAuthenticatedUser(data.user);
     handleSetView('dashboard');
+
+    if (data.user?.id) {
+      localStorage.setItem('campuspass_session_id', data.user.id);
+      document.cookie = `campuspass_session_id=${data.user.id}; path=/; max-age=31536000; SameSite=Lax`;
+      document.cookie = `campuspass_user_id=${data.user.id}; path=/; max-age=31536000; SameSite=Lax`;
+    }
 
     // Broadcast authenticated session to Chrome Extension Identity Wallet
     const sessionPayload = {
@@ -97,6 +118,9 @@ export default function App() {
     sound.playAccessDenied();
 
     try {
+      document.cookie = 'campuspass_session_id=; path=/; max-age=0;';
+      document.cookie = 'campuspass_user_id=; path=/; max-age=0;';
+      localStorage.removeItem('campuspass_session_id');
       localStorage.removeItem('campuspass_auth_session');
       window.dispatchEvent(new CustomEvent('CAMPUSPASS_AUTH_LOGOUT'));
       window.postMessage({ type: 'CAMPUSPASS_AUTH_LOGOUT' }, '*');
@@ -111,8 +135,6 @@ export default function App() {
         setView={handleSetView}
         authenticatedUser={authenticatedUser}
         onLogout={handleLogout}
-        soundMuted={soundMuted}
-        toggleSound={toggleSound}
       />
 
       {/* Main Container */}

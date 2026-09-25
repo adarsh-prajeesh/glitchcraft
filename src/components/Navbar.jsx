@@ -1,8 +1,7 @@
 import React from 'react';
-import { GraduationCap, LogOut, KeyRound, UserPlus, Barcode, Volume2, VolumeX } from 'lucide-react';
-import { sound } from '../services/sound';
+import { GraduationCap, LogOut, KeyRound, UserPlus, Barcode } from 'lucide-react';
 
-export default function Navbar({ currentView, setView, authenticatedUser, onLogout, soundMuted, toggleSound, onOpenBadges }) {
+export default function Navbar({ currentView, setView, authenticatedUser, onLogout, onOpenBadges }) {
   return (
     <header className="sticky top-0 z-50 border-b border-slate-800 bg-[#060911]/90 backdrop-blur-md px-4 lg:px-8 py-3.5">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -59,9 +58,22 @@ export default function Navbar({ currentView, setView, authenticatedUser, onLogo
             </div>
           )}
 
+          {/* Partner Websites SSO Direct Links */}
+          <div className="hidden lg:flex items-center gap-1 border-l border-r border-slate-800 px-2 mx-1">
+            <a href="/attendance" target="_blank" className="px-2.5 py-1 rounded-md text-xs font-mono text-cyan-400 hover:bg-cyan-950/60 border border-cyan-800/60">
+              📊 Attendance
+            </a>
+            <a href="/library" target="_blank" className="px-2.5 py-1 rounded-md text-xs font-mono text-emerald-400 hover:bg-emerald-950/60 border border-emerald-800/60">
+              📖 Library
+            </a>
+            <a href="/leave" target="_blank" className="px-2.5 py-1 rounded-md text-xs font-mono text-amber-400 hover:bg-amber-950/60 border border-amber-800/60">
+              📝 Leave
+            </a>
+          </div>
+
           {/* Test Badges Quick View */}
           <button
-            onClick={() => { sound.playClick(); if (onOpenBadges) onOpenBadges(); }}
+            onClick={() => { if (onOpenBadges) onOpenBadges(); }}
             className="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 bg-slate-800/70 text-slate-300 hover:text-white border border-slate-700/60 hover:border-slate-600 cursor-pointer"
             title="View Student ID Badges"
           >
@@ -69,14 +81,7 @@ export default function Navbar({ currentView, setView, authenticatedUser, onLogo
             <span className="hidden md:inline">ID Badges</span>
           </button>
 
-          {/* Audio Synthesizer Mute Toggle */}
-          <button
-            onClick={() => { toggleSound(); sound.playClick(); }}
-            className="p-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-colors cursor-pointer"
-            title={soundMuted ? 'Unmute Audio' : 'Mute Audio'}
-          >
-            {soundMuted ? <VolumeX className="w-4 h-4 text-slate-500" /> : <Volume2 className="w-4 h-4 text-cyan-400" />}
-          </button>
+          {/* Test Badges Quick View */}
 
           {/* Authenticated User Status or Logout */}
           {authenticatedUser && (

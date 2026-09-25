@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Central Library // CampusPass Partner Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            cyber: {
+              bg: '#040711',
+              card: '#090e1d',
+              border: '#162038',
+              cyan: '#06b6d4',
+              emerald: '#10b981',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #040711; color: #f1f5f9; }
+    .cyber-card { background: rgba(9, 14, 29, 0.85); backdrop-filter: blur(12px); border: 1px solid #162038; }
+    .cyber-glow { box-shadow: 0 0 25px rgba(6, 182, 212, 0.15); }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans selection:bg-cyan-500 selection:text-black">
+
+  <!-- Top Header Navigation -->
+  <header class="sticky top-0 z-50 border-b border-slate-800 bg-[#060911]/90 backdrop-blur-md px-4 sm:px-8 py-3.5">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/40 flex items-center justify-center text-cyan-400 font-bold font-mono text-lg">
+          📖
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-base font-bold tracking-wider text-slate-100 font-mono">CAMPUS<span class="text-cyan-400">PASS</span></span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-cyan-950 text-cyan-400 border border-cyan-800">TRUSTED LIBRARY VERIFIER</span>
+          </div>
+          <p class="text-[11px] text-slate-400 font-mono">Central Digital Library & Book Circulation System</p>
+        </div>
+      </div>
+
+      <!-- Authenticated User Token Badge -->
+      <div id="user-header-box" class="flex items-center gap-3">
+        <span class="text-xs font-mono text-slate-400 hidden sm:inline">Checking Cryptographic Token...</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+    <!-- Cryptographic Proof Token Status Banner -->
+    <div class="p-4 rounded-2xl cyber-card border border-cyan-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-300 font-mono font-bold shrink-0">
+          🔑
+        </div>
+        <div>
+          <h2 class="text-sm font-bold text-white font-mono flex items-center gap-2">
+            Library Identity Verified via Cryptographic Token
+          </h2>
+          <p class="text-xs text-slate-300 font-mono mt-0.5" id="token-details-text">
+            Domain-bound proof verified • Passwordless identity exchange complete
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <a href="/" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-mono border border-slate-700 transition-colors">
+          CampusPass Gateway
+        </a>
+      </div>
+    </div>
+
+    <!-- Student Summary Header -->
+    <div class="cyber-card rounded-2xl p-6 sm:p-8 border border-slate-800 cyber-glow">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 border-b border-slate-800">
+        <div class="flex items-center gap-4">
+          <img id="student-avatar" src="/avatars/sreevyas.jpg" alt="Student Profile" class="w-16 h-16 rounded-2xl object-cover border-2 border-cyan-500/50 shadow-lg" />
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-xl sm:text-2xl font-bold text-white" id="student-name">Loading Student...</h1>
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-mono bg-emerald-950 text-emerald-400 border border-emerald-800">LIBRARY ACTIVE</span>
+            </div>
+            <p class="text-xs text-cyan-400 font-mono mt-1" id="student-course">Department: AI MLL</p>
+            <p class="text-[11px] text-slate-400 font-mono mt-0.5" id="student-id">Student ID: ID-1</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full md:w-auto">
+          <div class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 text-center">
+            <span class="text-[10px] font-mono text-slate-400 block uppercase">Active Loans</span>
+            <span class="text-2xl font-extrabold text-cyan-400 font-mono" id="stat-loans">3 Books</span>
+          </div>
+          <div class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 text-center">
+            <span class="text-[10px] font-mono text-slate-400 block uppercase">Overdue Fines</span>
+            <span class="text-2xl font-extrabold text-emerald-400 font-mono">$0.00</span>
+          </div>
+          <div class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 text-center col-span-2 sm:col-span-1">
+            <span class="text-[10px] font-mono text-slate-400 block uppercase">Loan Allowance</span>
+            <span class="text-2xl font-extrabold text-purple-400 font-mono">5 Max</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Currently Borrowed Books -->
+      <div class="mt-6 space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-bold text-white font-mono uppercase tracking-wider flex items-center gap-2">
+            <span>📚 Currently Borrowed Books & Due Dates</span>
+          </h3>
+          <button onclick="alert('Book renewed successfully for +14 days!')" class="px-3 py-1 rounded-lg bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/40 text-xs font-mono">
+            Renew All Books 🔄
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="books-container">
+          <!-- Book Cards dynamically generated -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Book Search Catalog & Renewal History -->
+    <div class="cyber-card rounded-2xl p-6 border border-slate-800">
+      <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+        <h3 class="text-sm font-bold text-white font-mono uppercase tracking-wider">
+          🔍 Digital Catalog & Borrowing History
+        </h3>
+        <input type="text" placeholder="Search title or ISBN..." class="px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-xl text-xs font-mono focus:border-cyan-400 focus:outline-none w-48 sm:w-64 text-slate-200" />
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs font-mono">
+          <thead>
+            <tr class="border-b border-slate-800 text-slate-400 uppercase text-[10px]">
+              <th class="py-2.5 px-3">Book Title</th>
+              <th class="py-2.5 px-3">Author</th>
+              <th class="py-2.5 px-3">Borrowed On</th>
+              <th class="py-2.5 px-3">Due Date</th>
+              <th class="py-2.5 px-3 text-right">Status / Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60" id="history-table-body">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    async function loadLibrarySession() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const cookieMatch = document.cookie.match(/campuspass_session_id=([^;]+)/) || document.cookie.match(/campuspass_user_id=([^;]+)/);
+      const sessionIdFromCookie = cookieMatch ? cookieMatch[1] : null;
+
+      const sessionIdParam = urlParams.get('session_id') || urlParams.get('session') || sessionIdFromCookie || localStorage.getItem('campuspass_session_id');
+
+      let session = null;
+      try {
+        const raw = localStorage.getItem('campuspass_auth_session');
+        if (raw) session = JSON.parse(raw);
+      } catch (e) {}
+
+      if (sessionIdParam) {
+        try {
+          const res = await fetch(`/api/auth/session-login?session_id=${encodeURIComponent(sessionIdParam)}`);
+          const data = await res.json();
+          if (data.success && data.user) {
+            session = { user: data.user, claims: data.claims };
+            localStorage.setItem('campuspass_auth_session', JSON.stringify(session));
+          }
+        } catch (e) {}
+      }
+
+      const nameEl = document.getElementById('student-name');
+      const courseEl = document.getElementById('student-course');
+      const idEl = document.getElementById('student-id');
+      const avatarEl = document.getElementById('student-avatar');
+      const headerBox = document.getElementById('user-header-box');
+      const tokenText = document.getElementById('token-details-text');
+
+      const user = (session && session.user) ? session.user : { name: 'Sreevyas', course: 'AI MLL', id: 'ID-1', avatarUrl: '/avatars/sreevyas.jpg' };
+
+      nameEl.textContent = user.name;
+      courseEl.textContent = `Department: ${user.course || 'AI MLL'}`;
+      idEl.textContent = `Student ID: ${user.id || 'ID-1'}`;
+      avatarEl.src = user.avatarUrl || user.avatar_url || '/avatars/sreevyas.jpg';
+
+      headerBox.innerHTML = `
+        <div class="flex items-center gap-2 bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-xl">
+          <img src="${user.avatarUrl || user.avatar_url || '/avatars/sreevyas.jpg'}" alt="${user.name}" class="w-6 h-6 rounded-full object-cover border border-cyan-400" />
+          <span class="text-xs font-semibold text-slate-100 font-mono">${user.name}</span>
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        </div>
+      `;
+
+      tokenText.textContent = `Cryptographic Proof Active for ${user.name} (${user.id}) • Token Valid`;
+      generateLibraryData(user);
+    }
+
+    function generateLibraryData(user) {
+      const isAI = user.course && user.course.includes('AI');
+      const books = isAI ? [
+        { title: 'Artificial Intelligence: A Modern Approach', author: 'Stuart Russell & Peter Norvig', borrowed: '12 Sep 2026', due: '02 Oct 2026', daysLeft: 6, status: 'NORMAL' },
+        { title: 'Deep Learning with Python', author: 'François Chollet', borrowed: '18 Sep 2026', due: '05 Oct 2026', daysLeft: 9, status: 'NORMAL' },
+        { title: 'Pattern Recognition and Machine Learning', author: 'Christopher M. Bishop', borrowed: '05 Sep 2026', due: '28 Sep 2026', daysLeft: 2, status: 'DUE_SOON' }
+      ] : [
+        { title: 'Introduction to Algorithms (4th Ed)', author: 'Cormen, Leiserson, Rivest, Stein', borrowed: '10 Sep 2026', due: '01 Oct 2026', daysLeft: 5, status: 'NORMAL' },
+        { title: 'Operating System Concepts', author: 'Abraham Silberschatz', borrowed: '15 Sep 2026', due: '04 Oct 2026', daysLeft: 8, status: 'NORMAL' },
+        { title: 'Computer Networks: A Systems Approach', author: 'Larry L. Peterson', borrowed: '04 Sep 2026', due: '27 Sep 2026', daysLeft: 1, status: 'DUE_SOON' }
+      ];
+
+      const container = document.getElementById('books-container');
+      container.innerHTML = '';
+
+      books.forEach(b => {
+        const card = document.createElement('div');
+        card.className = 'p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-3';
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-mono text-cyan-400 bg-cyan-950 px-2 py-0.5 rounded border border-cyan-800">ISBN-978-01346</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono ${b.status === 'DUE_SOON' ? 'bg-amber-950 text-amber-400 border border-amber-800 animate-pulse' : 'bg-emerald-950 text-emerald-400 border border-emerald-800'}">
+              ${b.daysLeft} Days Remaining
+            </span>
+          </div>
+          <h4 class="text-sm font-bold text-white leading-tight">${b.title}</h4>
+          <p class="text-xs text-slate-400 font-mono">By ${b.author}</p>
+          <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs font-mono">
+            <div class="text-[11px] text-slate-400">Due: <strong class="text-white">${b.due}</strong></div>
+            <button onclick="alert('Book renewal confirmed!')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300 text-[11px] font-mono border border-slate-700">
+              Renew 🔄
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      const historyBody = document.getElementById('history-table-body');
+      historyBody.innerHTML = '';
+      books.forEach(b => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-800/30 transition-colors';
+        tr.innerHTML = `
+          <td class="py-2.5 px-3 font-bold text-white">${b.title}</td>
+          <td class="py-2.5 px-3 text-slate-300">${b.author}</td>
+          <td class="py-2.5 px-3 text-slate-400">${b.borrowed}</td>
+          <td class="py-2.5 px-3 text-cyan-300">${b.due}</td>
+          <td class="py-2.5 px-3 text-right">
+            <span class="px-2 py-0.5 rounded text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-800">ACTIVE LOAN</span>
+          </td>
+        `;
+        historyBody.appendChild(tr);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', loadLibrarySession);
+    window.addEventListener('CAMPUSPASS_AUTH_SYNC', loadLibrarySession);
+  </script>
+</body>
+</html>

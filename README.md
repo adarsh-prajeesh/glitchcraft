@@ -50,7 +50,7 @@ $$\text{Sim}(A, B) = \frac{A \cdot B}{\|A\|_2 \|B\|_2} = \frac{\sum_{i=1}^{128} 
 
 ## ⚡ Tech Stack
 
-- **Frontend**: React 19, Vite, Tailwind CSS, Lucide Icons, `html5-qrcode` optical barcode scanner, Web Audio API cyber sound synthesizer.
+- **Frontend**: React 19, Vite, Tailwind CSS, Lucide Icons, `html5-qrcode` optical barcode scanner.
 - **Backend**: Node.js, Express, `jsonwebtoken`, `better-sqlite3` (WAL mode enabled).
 - **Database**: SQLite (`backend/aegis_mfa.db`) storing:
   - `users`: Enrolled personnel, 128-d vectors, barcode payloads, clearance levels (1 to 5).

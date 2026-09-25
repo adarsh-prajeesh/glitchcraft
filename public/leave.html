@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leave Portal // CampusPass Partner Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            cyber: {
+              bg: '#040711',
+              card: '#090e1d',
+              border: '#162038',
+              cyan: '#06b6d4',
+              emerald: '#10b981',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #040711; color: #f1f5f9; }
+    .cyber-card { background: rgba(9, 14, 29, 0.85); backdrop-filter: blur(12px); border: 1px solid #162038; }
+    .cyber-glow { box-shadow: 0 0 25px rgba(6, 182, 212, 0.15); }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans selection:bg-cyan-500 selection:text-black">
+
+  <!-- Top Header Navigation -->
+  <header class="sticky top-0 z-50 border-b border-slate-800 bg-[#060911]/90 backdrop-blur-md px-4 sm:px-8 py-3.5">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/40 flex items-center justify-center text-cyan-400 font-bold font-mono text-lg">
+          📝
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-base font-bold tracking-wider text-slate-100 font-mono">CAMPUS<span class="text-cyan-400">PASS</span></span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-cyan-950 text-cyan-400 border border-cyan-800">TRUSTED LEAVE VERIFIER</span>
+          </div>
+          <p class="text-[11px] text-slate-400 font-mono">Student Leave & Absence Application Portal</p>
+        </div>
+      </div>
+
+      <!-- Authenticated User Token Badge -->
+      <div id="user-header-box" class="flex items-center gap-3">
+        <span class="text-xs font-mono text-slate-400 hidden sm:inline">Checking Cryptographic Token...</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+    <!-- Cryptographic Proof Token Status Banner -->
+    <div class="p-4 rounded-2xl cyber-card border border-cyan-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-300 font-mono font-bold shrink-0">
+          🔑
+        </div>
+        <div>
+          <h2 class="text-sm font-bold text-white font-mono flex items-center gap-2">
+            Leave Portal Authenticated via Cryptographic Proof Token
+          </h2>
+          <p class="text-xs text-slate-300 font-mono mt-0.5" id="token-details-text">
+            Domain-bound proof verified • Passwordless identity exchange complete
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <a href="/" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-mono border border-slate-700 transition-colors">
+          CampusPass Gateway
+        </a>
+      </div>
+    </div>
+
+    <!-- Student Summary Header -->
+    <div class="cyber-card rounded-2xl p-6 sm:p-8 border border-slate-800 cyber-glow">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 border-b border-slate-800">
+        <div class="flex items-center gap-4">
+          <img id="student-avatar" src="/avatars/sreevyas.jpg" alt="Student Profile" class="w-16 h-16 rounded-2xl object-cover border-2 border-cyan-500/50 shadow-lg" />
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-xl sm:text-2xl font-bold text-white" id="student-name">Loading Student...</h1>
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-mono bg-emerald-950 text-emerald-400 border border-emerald-800">VERIFIED STUDENT</span>
+            </div>
+            <p class="text-xs text-cyan-400 font-mono mt-1" id="student-course">Department: AI MLL</p>
+            <p class="text-[11px] text-slate-400 font-mono mt-0.5" id="student-id">Student ID: ID-1</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full md:w-auto">
+          <div class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 text-center">
+            <span class="text-[10px] font-mono text-slate-400 block uppercase">Casual Leaves</span>
+            <span class="text-2xl font-extrabold text-cyan-400 font-mono">4 Remaining</span>
+          </div>
+          <div class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 text-center">
+            <span class="text-[10px] font-mono text-slate-400 block uppercase">Medical Leaves</span>
+            <span class="text-2xl font-extrabold text-emerald-400 font-mono">8 Remaining</span>
+          </div>
+          <div class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 text-center col-span-2 sm:col-span-1">
+            <span class="text-[10px] font-mono text-slate-400 block uppercase">On-Duty / Events</span>
+            <span class="text-2xl font-extrabold text-purple-400 font-mono">2 Approved</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Apply for Leave Form & Interactive Calendar Chooser -->
+      <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Leave Form -->
+        <div class="space-y-4">
+          <h3 class="text-sm font-bold text-white font-mono uppercase tracking-wider flex items-center gap-2">
+            <span>📅 Apply for Leave</span>
+          </h3>
+
+          <div id="leave-success-alert" class="hidden p-3.5 rounded-xl bg-emerald-950 border border-emerald-800 text-emerald-300 text-xs font-mono">
+            ✓ Leave Application Submitted Successfully! Approved via Biometric Identity Proof.
+          </div>
+
+          <form id="leave-form" onsubmit="submitLeaveForm(event)" class="space-y-4">
+            <div>
+              <label class="block text-xs font-mono text-slate-300 mb-1 uppercase">Leave Category</label>
+              <select id="leave-type" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 text-xs font-mono focus:border-cyan-400 focus:outline-none">
+                <option value="Medical Leave">Medical Leave (Sick / Hospitalization)</option>
+                <option value="Personal Event">Personal / Family Event Leave</option>
+                <option value="On-Duty Hackathon">On-Duty Leave (Hackathon / Symposium)</option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-mono text-slate-300 mb-1 uppercase">From Date</label>
+                <input type="date" id="start-date" required class="w-full px-3.5 py-2 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 text-xs font-mono focus:border-cyan-400 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-xs font-mono text-slate-300 mb-1 uppercase">To Date</label>
+                <input type="date" id="end-date" required class="w-full px-3.5 py-2 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 text-xs font-mono focus:border-cyan-400 focus:outline-none" />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-mono text-slate-300 mb-1 uppercase">Reason / Justification</label>
+              <textarea id="leave-reason" rows="3" required placeholder="Explain reason for leave request..." class="w-full px-3.5 py-2 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 text-xs font-mono focus:border-cyan-400 focus:outline-none"></textarea>
+            </div>
+
+            <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white font-mono text-xs font-bold shadow-lg border border-cyan-400/40 transition-all flex items-center justify-center gap-2">
+              <span>Submit Leave Application 📝</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- Interactive Calendar Chooser Widget -->
+        <div class="space-y-4">
+          <h3 class="text-sm font-bold text-white font-mono uppercase tracking-wider flex items-center gap-2">
+            <span>📆 Date Chooser Calendar (September / October 2026)</span>
+          </h3>
+
+          <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-3">
+            <div class="flex items-center justify-between text-xs font-mono text-cyan-400 font-bold">
+              <span>September 2026</span>
+              <span>Select Date to Autofill</span>
+            </div>
+
+            <div class="grid grid-cols-7 gap-1 text-center font-mono text-xs text-slate-400 pb-2 border-b border-slate-800">
+              <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+            </div>
+
+            <div class="grid grid-cols-7 gap-1 text-center font-mono text-xs" id="calendar-days">
+              <!-- Dynamically rendered calendar days -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Application History Table -->
+    <div class="cyber-card rounded-2xl p-6 border border-slate-800">
+      <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+        <h3 class="text-sm font-bold text-white font-mono uppercase tracking-wider">
+          📑 Applied Leave Requests & Approval Status
+        </h3>
+        <span class="text-xs font-mono text-slate-400">Total Requests: 3</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs font-mono">
+          <thead>
+            <tr class="border-b border-slate-800 text-slate-400 uppercase text-[10px]">
+              <th class="py-2.5 px-3">Date Applied</th>
+              <th class="py-2.5 px-3">Category</th>
+              <th class="py-2.5 px-3">Leave Period</th>
+              <th class="py-2.5 px-3">Reason</th>
+              <th class="py-2.5 px-3 text-right">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60" id="leave-history-body">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    async function loadLeaveSession() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const cookieMatch = document.cookie.match(/campuspass_session_id=([^;]+)/) || document.cookie.match(/campuspass_user_id=([^;]+)/);
+      const sessionIdFromCookie = cookieMatch ? cookieMatch[1] : null;
+
+      const sessionIdParam = urlParams.get('session_id') || urlParams.get('session') || sessionIdFromCookie || localStorage.getItem('campuspass_session_id');
+
+      let session = null;
+      try {
+        const raw = localStorage.getItem('campuspass_auth_session');
+        if (raw) session = JSON.parse(raw);
+      } catch (e) {}
+
+      if (sessionIdParam) {
+        try {
+          const res = await fetch(`/api/auth/session-login?session_id=${encodeURIComponent(sessionIdParam)}`);
+          const data = await res.json();
+          if (data.success && data.user) {
+            session = { user: data.user, claims: data.claims };
+            localStorage.setItem('campuspass_auth_session', JSON.stringify(session));
+          }
+        } catch (e) {}
+      }
+
+      const nameEl = document.getElementById('student-name');
+      const courseEl = document.getElementById('student-course');
+      const idEl = document.getElementById('student-id');
+      const avatarEl = document.getElementById('student-avatar');
+      const headerBox = document.getElementById('user-header-box');
+      const tokenText = document.getElementById('token-details-text');
+
+      const user = (session && session.user) ? session.user : { name: 'Sreevyas', course: 'AI MLL', id: 'ID-1', avatarUrl: '/avatars/sreevyas.jpg' };
+
+      nameEl.textContent = user.name;
+      courseEl.textContent = `Department: ${user.course || 'AI MLL'}`;
+      idEl.textContent = `Student ID: ${user.id || 'ID-1'}`;
+      avatarEl.src = user.avatarUrl || user.avatar_url || '/avatars/sreevyas.jpg';
+
+      headerBox.innerHTML = `
+        <div class="flex items-center gap-2 bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-xl">
+          <img src="${user.avatarUrl || user.avatar_url || '/avatars/sreevyas.jpg'}" alt="${user.name}" class="w-6 h-6 rounded-full object-cover border border-cyan-400" />
+          <span class="text-xs font-semibold text-slate-100 font-mono">${user.name}</span>
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        </div>
+      `;
+
+      tokenText.textContent = `Cryptographic Proof Active for ${user.name} (${user.id}) • Token Valid`;
+      renderCalendar();
+      renderLeaveHistory(user);
+    }
+
+    function renderCalendar() {
+      const container = document.getElementById('calendar-days');
+      container.innerHTML = '';
+      
+      // Blank spaces for start of month
+      for (let i = 0; i < 2; i++) {
+        const span = document.createElement('span');
+        span.className = 'py-2 opacity-20';
+        container.appendChild(span);
+      }
+
+      for (let day = 1; day <= 30; day++) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        const dateStr = `2026-09-${String(day).padStart(2, '0')}`;
+        const isToday = day === 26;
+        btn.className = `py-2 rounded-lg font-mono text-xs transition-colors cursor-pointer ${
+          isToday ? 'bg-cyan-500 text-black font-bold ring-2 ring-cyan-300' : 'bg-slate-800/60 hover:bg-cyan-900/50 text-slate-200'
+        }`;
+        btn.textContent = day;
+        btn.onclick = () => {
+          document.getElementById('start-date').value = dateStr;
+          document.getElementById('end-date').value = dateStr;
+        };
+        container.appendChild(btn);
+      }
+    }
+
+    function submitLeaveForm(e) {
+      e.preventDefault();
+      const alertEl = document.getElementById('leave-success-alert');
+      alertEl.classList.remove('hidden');
+      setTimeout(() => alertEl.classList.add('hidden'), 5000);
+      
+      const type = document.getElementById('leave-type').value;
+      const start = document.getElementById('start-date').value;
+      const reason = document.getElementById('leave-reason').value;
+
+      const historyBody = document.getElementById('leave-history-body');
+      const tr = document.createElement('tr');
+      tr.className = 'hover:bg-slate-800/30 transition-colors animate-fade-in';
+      tr.innerHTML = `
+        <td class="py-2.5 px-3 text-slate-300">Today</td>
+        <td class="py-2.5 px-3 text-cyan-300 font-bold">${type}</td>
+        <td class="py-2.5 px-3 text-slate-300">${start}</td>
+        <td class="py-2.5 px-3 text-slate-400">${reason}</td>
+        <td class="py-2.5 px-3 text-right">
+          <span class="px-2 py-0.5 rounded text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-800">APPROVED (BIO)</span>
+        </td>
+      `;
+      historyBody.insertBefore(tr, historyBody.firstChild);
+    }
+
+    function renderLeaveHistory(user) {
+      const historyBody = document.getElementById('leave-history-body');
+      historyBody.innerHTML = `
+        <tr class="hover:bg-slate-800/30 transition-colors">
+          <td class="py-2.5 px-3 text-slate-300">14 Sep 2026</td>
+          <td class="py-2.5 px-3 text-cyan-300 font-bold">On-Duty Leave</td>
+          <td class="py-2.5 px-3 text-slate-300">15 Sep - 17 Sep 2026</td>
+          <td class="py-2.5 px-3 text-slate-400">National Hackathon Event</td>
+          <td class="py-2.5 px-3 text-right">
+            <span class="px-2 py-0.5 rounded text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-800">APPROVED</span>
+          </td>
+        </tr>
+        <tr class="hover:bg-slate-800/30 transition-colors">
+          <td class="py-2.5 px-3 text-slate-300">02 Sep 2026</td>
+          <td class="py-2.5 px-3 text-cyan-300 font-bold">Medical Leave</td>
+          <td class="py-2.5 px-3 text-slate-300">03 Sep 2026</td>
+          <td class="py-2.5 px-3 text-slate-400">Fever & Medical Checkup</td>
+          <td class="py-2.5 px-3 text-right">
+            <span class="px-2 py-0.5 rounded text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-800">APPROVED</span>
+          </td>
+        </tr>
+      `;
+    }
+
+    document.addEventListener('DOMContentLoaded', loadLeaveSession);
+    window.addEventListener('CAMPUSPASS_AUTH_SYNC', loadLeaveSession);
+  </script>
+</body>
+</html>

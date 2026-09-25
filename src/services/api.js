@@ -17,6 +17,14 @@ export const api = {
     return data;
   },
 
+  // Auto-login via session_id token
+  async loginWithSessionId(sessionId) {
+    const res = await fetch(`${API_BASE}/auth/session-login?session_id=${encodeURIComponent(sessionId)}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Session auto-login failed');
+    return data;
+  },
+
   // Wallet Identity Claims
   async getClaims(userId) {
     const res = await fetch(`${API_BASE}/wallet/claims${userId ? `?userId=${userId}` : ''}`);

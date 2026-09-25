@@ -5,12 +5,11 @@
  */
 
 (function () {
-  // Mark extension presence in DOM window
+  // Mark extension presence in DOM window without CSP inline script violation
   try {
-    const script = document.createElement('script');
-    script.textContent = 'window.__CAMPUSPASS_EXTENSION_CONNECTED__ = true; window.dispatchEvent(new CustomEvent("CAMPUSPASS_EXT_READY"));';
-    (document.head || document.documentElement).appendChild(script);
-    script.remove();
+    document.documentElement.setAttribute('data-campuspass-extension', 'true');
+    window.dispatchEvent(new CustomEvent('CAMPUSPASS_EXT_READY'));
+    window.postMessage({ type: 'CAMPUSPASS_EXT_READY' }, '*');
   } catch (e) {}
 
   // Sync session to background service worker

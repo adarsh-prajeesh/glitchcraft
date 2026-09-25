@@ -108,4 +108,28 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
     return true;
   }
+
+  if (type === 'GET_SITE_VAULT') {
+    const { userId, domain } = payload;
+    chrome.storage.local.get(['user_vaults'], (data) => {
+      const vaults = data.user_vaults || {};
+      const userVault = vaults[userId] || {};
+      const domainData = userVault[domain] || userVault['default'] || null;
+      sendResponse({ success: true, vault: domainData });
+    });
+    return true;
+  }
+
+  if (type === 'SAVE_SITE_VAULT') {
+    const { userId, domain, vaultData } = payload;
+    chrome.storage.local.get(['user_vaults'], (data) => {
+      const vaults = data.user_vaults || {};
+      if (!vaults[userId]) vaults[userId] = {};
+      vaults[userId][domain] = vaultData;
+      chrome.storage.local.set({ user_vaults: vaults }, () => {
+        sendResponse({ success: true, vault: vaultData });
+      });
+    });
+    return true;
+  }
 });

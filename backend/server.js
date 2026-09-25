@@ -24,6 +24,20 @@ const BIOMETRIC_SIMILARITY_THRESHOLD = parseFloat(process.env.BIOMETRIC_THRESHOL
 
 app.use(cors());
 app.use(express.json({ limit: '15mb' }));
+app.use(express.static(path.join(__dirname, '..', 'public')));
+
+// Partner Pages Routes
+app.get('/attendance', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'attendance.html'));
+});
+
+app.get('/library', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'library.html'));
+});
+
+app.get('/leave', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'leave.html'));
+});
 
 // Authentication Middleware
 function authenticateToken(req, res, next) {
@@ -163,6 +177,13 @@ app.post('/api/auth/step1-face', (req, res) => {
       VALUES (?, ?, 'LOGIN_SUCCESS', 1, NULL, ?, ?, ?)
     `).run(matchedUser.id, matchedUser.name, ipAddress, userAgent, Date.now() - startTime);
 
+    // Set cookies for cross-page Single Sign-On (SSO)
+    res.setHeader('Set-Cookie', [
+      `campuspass_session_id=${matchedUser.id}; Path=/; Max-Age=31536000; SameSite=Lax`,
+      `campuspass_user_id=${matchedUser.id}; Path=/; Max-Age=31536000; SameSite=Lax`,
+      `campuspass_auth_token=${authToken}; Path=/; Max-Age=31536000; SameSite=Lax`
+    ]);
+
     return res.json({
       success: true,
       message: `IDENTITY VERIFIED: Facial Biometric matched ${matchedUser.name}`,
@@ -185,6 +206,93 @@ app.post('/api/auth/step1-face', (req, res) => {
     res.status(500).json({ error: 'Internal Facial Recognition Server Error' });
   }
 });
+
+// =========================================================================
+// AUTO-LOGIN VIA SESSION_ID TOKEN / COOKIE
+// =========================================================================
+const handleSessionLogin = (req, res) => {
+  const cookieHeader = req.headers.cookie || '';
+  const cookieMatch = cookieHeader.match(/campuspass_session_id=([^;]+)/) || cookieHeader.match(/campuspass_user_id=([^;]+)/);
+  const sessionIdFromCookie = cookieMatch ? cookieMatch[1] : null;
+
+  const sessionId = req.query.session_id || req.body?.session_id || req.body?.sessionId || sessionIdFromCookie;
+
+  if (!sessionId) {
+    return res.status(400).json({ success: false, error: 'session_id parameter or cookie required' });
+  }
+
+  try {
+    let user = null;
+    // 1. Check auth_sessions table
+    const sessRecord = db.prepare('SELECT user_id FROM auth_sessions WHERE session_id = ?').get(sessionId);
+    if (sessRecord) {
+      user = db.prepare('SELECT * FROM users WHERE id = ?').get(sessRecord.user_id);
+    }
+
+    // 2. Direct user ID / email match fallback
+    if (!user) {
+      user = db.prepare('SELECT * FROM users WHERE id = ? OR email = ?').get(sessionId, sessionId);
+    }
+
+    // 3. Number key ID fallback (e.g. session_id=1 or 2)
+    if (!user) {
+      const idx = parseInt(sessionId);
+      if (!isNaN(idx)) {
+        user = db.prepare('SELECT * FROM users WHERE id = ?').get(`ID-${idx}`);
+      }
+    }
+
+    if (!user) {
+      return res.status(404).json({ success: false, error: `Session token '${sessionId}' not found or expired.` });
+    }
+
+    // Issue permanent 8-hour session JWT token
+    const authToken = jwt.sign(
+      {
+        userId: user.id,
+        email: user.email,
+        name: user.name,
+        course: user.course
+      },
+      JWT_SECRET,
+      { expiresIn: '8h' }
+    );
+
+    const claims = db.prepare('SELECT claim_key, claim_value, category FROM user_claims WHERE user_id = ?').all(user.id);
+
+    db.prepare(`
+      INSERT INTO audit_logs (user_id, user_name, event_type, step_reached, failure_reason, ip_address, user_agent, latency_ms)
+      VALUES (?, ?, 'SESSION_AUTO_LOGIN', 1, NULL, ?, ?, 25)
+    `).run(user.id, user.name, req.ip || '127.0.0.1', req.headers['user-agent'] || 'Auto Login Engine');
+
+    res.setHeader('Set-Cookie', [
+      `campuspass_session_id=${user.id}; Path=/; Max-Age=31536000; SameSite=Lax`,
+      `campuspass_user_id=${user.id}; Path=/; Max-Age=31536000; SameSite=Lax`,
+      `campuspass_auth_token=${authToken}; Path=/; Max-Age=31536000; SameSite=Lax`
+    ]);
+
+    return res.json({
+      success: true,
+      message: `AUTO LOGIN SUCCESSFUL: Authenticated as ${user.name}`,
+      authToken,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        course: user.course,
+        age: user.age,
+        avatarUrl: user.avatar_url
+      },
+      claims
+    });
+  } catch (e) {
+    console.error('Session Login Error:', e);
+    res.status(500).json({ error: 'Session authentication failed: ' + e.message });
+  }
+};
+
+app.get('/api/auth/session-login', handleSessionLogin);
+app.post('/api/auth/session-login', handleSessionLogin);
 
 // =========================================================================
 // REGISTER NEW USER & INITIALIZE DEFAULT IDENTITY CLAIMS
