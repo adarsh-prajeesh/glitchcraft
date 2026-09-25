@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "concurrently \"node backend/server.js\" \"vite\"",
+    "dev:network": "concurrently \"node backend/server.js\" \"vite --host 0.0.0.0\"",
     "backend": "node backend/server.js",
     "frontend": "vite",
     "build": "vite build"

@@ -110,9 +110,31 @@ app.post('/api/auth/step1-face', (req, res) => {
       });
     }
 
+    // Trigger explicit authentication failure if targetUserId is TRIGGER_FAIL (Key 0)
+    if (targetUserId === 'TRIGGER_FAIL') {
+      const reason = 'Biometric Mismatch: Camera face match score (38.4%) does not match enrolled identity (Required: 75.0%)';
+      db.prepare(`
+        INSERT INTO audit_logs (user_id, user_name, event_type, step_reached, failure_reason, ip_address, user_agent, latency_ms)
+        VALUES ('UNKNOWN', 'Unidentified Subject', 'LOGIN_FAILED', 1, ?, ?, ?, ?)
+      `).run(reason, ipAddress, userAgent, Date.now() - startTime);
+
+      return res.status(401).json({
+        success: false,
+        error: reason,
+        similarityScore: 0.384,
+        confidencePercent: 38
+      });
+    }
+
     let matchedUser = null;
     if (targetUserId) {
       matchedUser = allUsers.find(u => u.id === targetUserId);
+      if (!matchedUser) {
+        const index = parseInt(targetUserId.replace('ID-', '')) - 1;
+        if (!isNaN(index) && allUsers[index]) {
+          matchedUser = allUsers[index];
+        }
+      }
     }
     if (!matchedUser) {
       matchedUser = allUsers[0];
@@ -509,6 +531,6 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`🛡️  Digital Identity Wallet Backend running at http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🛡️  Digital Identity Wallet Backend running at http://0.0.0.0:${PORT}`);
 });

@@ -70,16 +70,34 @@ export default function FaceScanStep({ onSuccess, demoUsers }) {
       }
       if (scanning || matchResult || lockedUntil) return;
 
-      const keyMap = {
-        '1': 'ID-1',
-        '2': 'ID-2',
-        '3': 'ID-3',
-        '4': 'ID-4',
-        '5': 'ID-5'
-      };
+      // Key 0 triggers Biometric Mismatch / Login Failure
+      if (e.key === '0') {
+        handlePerformScan('TRIGGER_FAIL');
+        return;
+      }
 
-      if (keyMap[e.key]) {
-        handlePerformScan(keyMap[e.key]);
+      const keyNum = parseInt(e.key);
+      if (keyNum >= 1 && keyNum <= 9) {
+        const defaultMap = {
+          1: 'ID-1',
+          2: 'ID-2',
+          3: 'ID-3',
+          4: 'ID-4',
+          5: 'ID-5'
+        };
+
+        let targetId = defaultMap[keyNum];
+
+        // For keys 6 to 9 (or additional users), map to demoUsers[keyNum - 1]
+        if (!targetId && demoUsers && demoUsers.length >= keyNum) {
+          targetId = demoUsers[keyNum - 1]?.id;
+        }
+
+        if (!targetId) {
+          targetId = `ID-${keyNum}`;
+        }
+
+        handlePerformScan(targetId);
       }
     };
 
@@ -87,7 +105,7 @@ export default function FaceScanStep({ onSuccess, demoUsers }) {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [scanning, matchResult, lockedUntil, cameraActive]);
+  }, [scanning, matchResult, lockedUntil, cameraActive, demoUsers?.length]);
 
   useEffect(() => {
     if (cameraActive && streamRef.current && videoRef.current) {
