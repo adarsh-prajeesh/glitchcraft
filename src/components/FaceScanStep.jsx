@@ -23,18 +23,26 @@ export default function FaceScanStep({ onSuccess, demoUsers = [], onGoToEnrollme
     setErrorMsg(null);
     setCameraError(null);
     try {
+      if (!navigator?.mediaDevices?.getUserMedia) {
+        throw new Error('Camera access not supported or requires a secure context (HTTPS / localhost).');
+      }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' }
       });
+      streamRef.current = stream;
+      setCameraActive(true);
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        streamRef.current = stream;
-        setCameraActive(true);
-        startHudLoop();
+        videoRef.current.play().catch(e => console.warn('Video play error:', e));
       }
+      startHudLoop();
     } catch (err) {
       console.warn('Webcam access error:', err);
-      setCameraError('Camera access unavailable or permission not granted.');
+      setCameraError(err.message || 'Camera access unavailable or permission not granted.');
       setCameraActive(false);
     }
   };
@@ -47,6 +55,9 @@ export default function FaceScanStep({ onSuccess, demoUsers = [], onGoToEnrollme
     if (animFrameRef.current) {
       cancelAnimationFrame(animFrameRef.current);
     }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
     setCameraActive(false);
   };
 
@@ -54,6 +65,14 @@ export default function FaceScanStep({ onSuccess, demoUsers = [], onGoToEnrollme
     startCamera();
     return () => stopCamera();
   }, []);
+
+  // Ensure video element receives stream whenever cameraActive is true
+  useEffect(() => {
+    if (cameraActive && videoRef.current && streamRef.current && videoRef.current.srcObject !== streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.play().catch(e => console.warn('Video play error:', e));
+    }
+  }, [cameraActive]);
 
   // Biometric HUD Canvas Overlay Animation
   const startHudLoop = () => {
@@ -288,11 +307,11 @@ export default function FaceScanStep({ onSuccess, demoUsers = [], onGoToEnrollme
               {cameraError || 'Please allow webcam permission to capture and send your face to the server.'}
             </p>
             <button
-              onClick={startCamera}
+              onClick={() => { sound.playClick(); startCamera(); }}
               className="px-4 py-2 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-medium hover:bg-emerald-500/30 transition-all flex items-center gap-2 cursor-pointer"
             >
               <Camera className="w-4 h-4" />
-              <span>Retry Camera Connect</span>
+              <span>Open Camera / Connect</span>
             </button>
           </div>
         )}

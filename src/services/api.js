@@ -7,11 +7,11 @@ const API_BASE = '/api';
 
 export const api = {
   // Step 1: Face ID Scan (Sends camera image to server-side recognition engine)
-  async verifyStep1Face({ faceImage, simulatedUserId, testBypass }) {
+  async verifyStep1Face({ faceImage, simulatedUserId, targetUserId, testBypass }) {
     const res = await fetch(`${API_BASE}/auth/step1-face`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ faceImage, simulatedUserId, testBypass })
+      body: JSON.stringify({ faceImage, targetUserId: targetUserId || simulatedUserId, testBypass })
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Server-side facial verification failed');

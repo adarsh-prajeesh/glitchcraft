@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { UserPlus, Camera, Barcode, CheckCircle2, AlertTriangle, RefreshCw, GraduationCap, Users, ArrowLeft, ExternalLink, Calendar, BookOpen, Mail, User } from 'lucide-react';
+import { UserPlus, Camera, Barcode, CheckCircle2, AlertTriangle, RefreshCw, GraduationCap, Users, ArrowLeft, ExternalLink, Calendar, BookOpen, Mail, User, Upload, CameraOff } from 'lucide-react';
 import { api } from '../services/api';
 import { sound } from '../services/sound';
 
@@ -20,6 +20,8 @@ export default function AdminEnrollment({ onBackToGateway, onOpenBadges }) {
   const [successMsg, setSuccessMsg] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [cameraActive, setCameraActive] = useState(false);
+  const [cameraLoading, setCameraLoading] = useState(false);
+  const [cameraError, setCameraError] = useState(null);
 
   const videoRef = useRef(null);
   const streamRef = useRef(null);
@@ -39,22 +41,53 @@ export default function AdminEnrollment({ onBackToGateway, onOpenBadges }) {
 
   useEffect(() => {
     loadStudents();
+    return () => {
+      stopCamera();
+    };
   }, []);
+
+  // Ensure video element receives stream when cameraActive becomes true
+  useEffect(() => {
+    if (cameraActive && streamRef.current && videoRef.current) {
+      if (videoRef.current.srcObject !== streamRef.current) {
+        videoRef.current.srcObject = streamRef.current;
+      }
+      videoRef.current.play().catch(e => console.warn('Video play error:', e));
+    }
+  }, [cameraActive]);
 
   // Start enrollment webcam
   const startCamera = async () => {
     try {
+      setCameraError(null);
+      setCameraLoading(true);
+
+      if (!navigator?.mediaDevices?.getUserMedia) {
+        throw new Error('Webcam not supported or requires a secure origin (HTTPS or localhost).');
+      }
+
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(t => t.stop());
+        streamRef.current = null;
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 360, height: 360, facingMode: 'user' }
+        video: { width: { ideal: 640 }, height: { ideal: 640 }, facingMode: 'user' }
       });
+
+      streamRef.current = stream;
+      setCameraActive(true);
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        streamRef.current = stream;
-        setCameraActive(true);
+        videoRef.current.play().catch(e => console.warn('Video play error:', e));
       }
     } catch (e) {
       console.warn('Enrollment camera error:', e);
+      setCameraError(e.message || 'Camera access unavailable or permission not granted.');
       setCameraActive(false);
+    } finally {
+      setCameraLoading(false);
     }
   };
 
@@ -63,7 +96,11 @@ export default function AdminEnrollment({ onBackToGateway, onOpenBadges }) {
       streamRef.current.getTracks().forEach(t => t.stop());
       streamRef.current = null;
     }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
     setCameraActive(false);
+    setCameraLoading(false);
   };
 
   const capturePhoto = () => {
@@ -79,6 +116,27 @@ export default function AdminEnrollment({ onBackToGateway, onOpenBadges }) {
     setFaceCaptured(true);
     sound.playFaceMatched();
     stopCamera();
+  };
+
+  const handleRetakePhoto = () => {
+    setFaceCaptured(false);
+    setFaceImageBase64(null);
+    setCameraError(null);
+    startCamera();
+  };
+
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setFaceImageBase64(ev.target.result);
+      setFaceCaptured(true);
+      setCameraError(null);
+      stopCamera();
+      sound.playFaceMatched();
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleNameChange = (nameVal) => {
@@ -306,51 +364,103 @@ export default function AdminEnrollment({ onBackToGateway, onOpenBadges }) {
               <div className="w-32 h-32 rounded-xl bg-slate-950 border border-slate-700 overflow-hidden flex items-center justify-center relative shadow-inner">
                 {faceImageBase64 ? (
                   <img src={faceImageBase64} alt="Student Snapshot" className="w-full h-full object-cover" />
-                ) : cameraActive ? (
-                  <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover -scale-x-100" />
                 ) : (
-                  <Camera className="w-8 h-8 text-slate-600" />
+                  <>
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      className={`w-full h-full object-cover -scale-x-100 ${cameraActive ? 'block' : 'hidden'}`}
+                    />
+                    {!cameraActive && (
+                      <div className="flex flex-col items-center justify-center text-slate-500">
+                        {cameraLoading ? (
+                          <RefreshCw className="w-8 h-8 text-cyan-400 animate-spin" />
+                        ) : (
+                          <Camera className="w-8 h-8 text-slate-600" />
+                        )}
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 
               <div className="flex-1 space-y-2 text-center sm:text-left">
                 <p className="text-xs text-slate-400 font-mono">
-                  Take a photo using the webcam. This photo will appear on the student's ID card and will be used by the server to verify Face ID during login.
+                  Take a photo using the webcam or upload a portrait. This photo will appear on the student's ID card and will be used by the server to verify Face ID during login.
                 </p>
 
                 <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start">
                   {!cameraActive && !faceCaptured && (
                     <button
                       type="button"
-                      onClick={startCamera}
-                      className="px-3.5 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 text-xs font-mono border border-emerald-500/40 flex items-center gap-1.5 cursor-pointer"
+                      onClick={() => { sound.playClick(); startCamera(); }}
+                      disabled={cameraLoading}
+                      className="px-3.5 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 text-xs font-mono border border-emerald-500/40 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                     >
-                      <Camera className="w-3.5 h-3.5" />
-                      <span>Start Camera</span>
+                      {cameraLoading ? (
+                        <>
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          <span>Opening Camera...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Camera className="w-3.5 h-3.5" />
+                          <span>Open Camera</span>
+                        </>
+                      )}
                     </button>
                   )}
 
                   {cameraActive && (
-                    <button
-                      type="button"
-                      onClick={capturePhoto}
-                      className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer shadow-lg shadow-emerald-500/20"
-                    >
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>Snap ID Photo</span>
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        onClick={capturePhoto}
+                        className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer shadow-lg shadow-emerald-500/20"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Snap ID Photo</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={stopCamera}
+                        className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono cursor-pointer border border-slate-700"
+                      >
+                        Close Camera
+                      </button>
+                    </>
                   )}
 
                   {faceCaptured && (
                     <button
                       type="button"
-                      onClick={() => { setFaceCaptured(false); setFaceImageBase64(null); startCamera(); }}
-                      className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono cursor-pointer"
+                      onClick={handleRetakePhoto}
+                      className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono cursor-pointer border border-slate-700"
                     >
                       Retake Photo
                     </button>
                   )}
+
+                  <label className="px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-mono border border-slate-700 flex items-center gap-1.5 cursor-pointer">
+                    <Upload className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Upload Photo</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handlePhotoUpload}
+                    />
+                  </label>
                 </div>
+
+                {cameraError && (
+                  <p className="text-xs text-rose-400 font-mono mt-1.5 flex items-center gap-1.5">
+                    <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{cameraError}</span>
+                  </p>
+                )}
               </div>
             </div>
           </div>

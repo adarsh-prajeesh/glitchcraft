@@ -80,6 +80,20 @@ export default function App() {
     setAuthToken(data.authToken);
     setAuthenticatedUser(data.user);
     handleSetView('dashboard');
+
+    // Broadcast authenticated session to CampusPass Chrome Extension SSO Assistant
+    const sessionPayload = {
+      user: data.user,
+      authToken: data.authToken,
+      timestamp: Date.now()
+    };
+    try {
+      localStorage.setItem('campuspass_auth_session', JSON.stringify(sessionPayload));
+      window.dispatchEvent(new CustomEvent('CAMPUSPASS_AUTH_SYNC', { detail: sessionPayload }));
+      window.postMessage({ type: 'CAMPUSPASS_AUTH_SYNC', payload: sessionPayload }, '*');
+    } catch (e) {
+      console.warn('SSO sync broadcast failed:', e);
+    }
   };
 
   // Logout
@@ -90,6 +104,12 @@ export default function App() {
     setAuthStep(1);
     handleSetView('auth');
     sound.playAccessDenied();
+
+    try {
+      localStorage.removeItem('campuspass_auth_session');
+      window.dispatchEvent(new CustomEvent('CAMPUSPASS_AUTH_LOGOUT'));
+      window.postMessage({ type: 'CAMPUSPASS_AUTH_LOGOUT' }, '*');
+    } catch (e) {}
   };
 
   // Back from Barcode to Face

@@ -22,7 +22,13 @@ export default function BarcodeScanStep({ step1Data, onSuccess, onBack, onOpenBa
   const startCameraBarcodeScanner = async () => {
     try {
       if (scannerRef.current) {
-        await scannerRef.current.stop().catch(() => {});
+        try {
+          await scannerRef.current.stop();
+        } catch (e) {}
+        try {
+          scannerRef.current.clear();
+        } catch (e) {}
+        scannerRef.current = null;
       }
 
       const html5QrCode = new Html5Qrcode("barcode-scanner-viewport");
@@ -34,19 +40,29 @@ export default function BarcodeScanStep({ step1Data, onSuccess, onBack, onOpenBa
         aspectRatio: 1.777778
       };
 
-      await html5QrCode.start(
-        { facingMode: "environment" },
-        config,
-        (decodedText) => {
-          // Barcode successfully decoded from camera stream!
-          sound.playBarcodeChirp();
-          setBarcodeInput(decodedText);
-          handleVerifyBarcode(decodedText);
-        },
-        (errorMessage) => {
-          // Frame tick
-        }
-      );
+      const onScanSuccess = (decodedText) => {
+        // Barcode successfully decoded from camera stream!
+        sound.playBarcodeChirp();
+        setBarcodeInput(decodedText);
+        handleVerifyBarcode(decodedText);
+      };
+
+      try {
+        await html5QrCode.start(
+          { facingMode: "environment" },
+          config,
+          onScanSuccess,
+          () => {}
+        );
+      } catch (envErr) {
+        console.warn("Environment camera not found, falling back to default/user camera:", envErr);
+        await html5QrCode.start(
+          { facingMode: "user" },
+          config,
+          onScanSuccess,
+          () => {}
+        );
+      }
 
       setCameraActive(true);
     } catch (err) {
@@ -59,6 +75,8 @@ export default function BarcodeScanStep({ step1Data, onSuccess, onBack, onOpenBa
     if (scannerRef.current) {
       try {
         await scannerRef.current.stop();
+      } catch (e) {}
+      try {
         scannerRef.current.clear();
       } catch (e) {}
       scannerRef.current = null;
