@@ -8,7 +8,9 @@ export default function AdminEnrollment({ onBackToGateway, onOpenBadges }) {
     name: '',
     email: '',
     course: '',
-    age: ''
+    age: '',
+    phone: '',
+    cardNumber: ''
   });
 
   const [enrolledStudents, setEnrolledStudents] = useState([]);
@@ -29,6 +31,8 @@ export default function AdminEnrollment({ onBackToGateway, onOpenBadges }) {
     email: '',
     course: '',
     age: '',
+    phone: '',
+    cardNumber: '',
     avatarUrl: '',
     faceImage: null
   });
@@ -59,6 +63,8 @@ export default function AdminEnrollment({ onBackToGateway, onOpenBadges }) {
       email: user.email || '',
       course: user.course || '',
       age: user.age || '',
+      phone: user.phone || '+91 98765 43210',
+      cardNumber: user.cardNumber || user.card_number || '4916 2201 8842 1093',
       avatarUrl: user.avatar_url || user.reference_photo || '',
       faceImage: null
     });

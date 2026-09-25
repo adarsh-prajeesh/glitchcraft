@@ -281,6 +281,8 @@ const handleSessionLogin = (req, res) => {
         email: user.email,
         course: user.course,
         age: user.age,
+        phone: user.phone || '+91 98765 43210',
+        cardNumber: user.card_number || '4916 2201 8842 1093',
         avatarUrl: user.avatar_url
       },
       claims
@@ -298,7 +300,7 @@ app.post('/api/auth/session-login', handleSessionLogin);
 // REGISTER NEW USER & INITIALIZE DEFAULT IDENTITY CLAIMS
 // =========================================================================
 app.post('/api/auth/register', (req, res) => {
-  const { id, name, email, course, age, faceImage, avatarUrl } = req.body;
+  const { id, name, email, course, age, phone, cardNumber, card_number, faceImage, avatarUrl } = req.body;
 
   if (!name || !email) {
     return res.status(400).json({ error: 'Missing required enrollment parameters (Name and Email).' });
@@ -316,6 +318,8 @@ app.post('/api/auth/register', (req, res) => {
 
     const userCourse = course || 'General Studies';
     const userAge = parseInt(age) || 21;
+    const userPhone = phone || '+91 98765 43210';
+    const userCard = cardNumber || card_number || '4916 2201 8842 1093';
 
     // Check for duplicate email
     const existing = db.prepare('SELECT id, email FROM users WHERE email = ?').get(email);
@@ -326,10 +330,10 @@ app.post('/api/auth/register', (req, res) => {
     }
 
     db.prepare(`
-      INSERT INTO users (id, name, email, course, age, face_embedding, barcode_payload, avatar_url)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO users (id, name, email, course, age, phone, card_number, face_embedding, barcode_payload, avatar_url)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
-      userId, name, email, userCourse, userAge,
+      userId, name, email, userCourse, userAge, userPhone, userCard,
       JSON.stringify(embeddingVector),
       `BC-${Math.floor(100000 + Math.random() * 900000)}`,
       avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80'
@@ -341,6 +345,8 @@ app.post('/api/auth/register', (req, res) => {
     insertClaim.run(userId, 'Email', email, 'basic');
     insertClaim.run(userId, 'Course / Department', userCourse, 'basic');
     insertClaim.run(userId, 'Age', String(userAge), 'basic');
+    insertClaim.run(userId, 'Phone Number', userPhone, 'basic');
+    insertClaim.run(userId, 'Credit Card Number', userCard, 'protected');
     insertClaim.run(userId, 'Student ID', userId, 'basic');
     insertClaim.run(userId, 'National SSN / Gov ID', `GOV-ID-${Math.floor(100000 + Math.random() * 900000)}`, 'protected');
     insertClaim.run(userId, 'Bank Account Details', `ACC-${Math.floor(10000000 + Math.random() * 90000000)}`, 'protected');
@@ -358,7 +364,9 @@ app.post('/api/auth/register', (req, res) => {
         name,
         email,
         course: userCourse,
-        age: userAge
+        age: userAge,
+        phone: userPhone,
+        cardNumber: userCard
       }
     });
   } catch (error) {
@@ -512,7 +520,7 @@ app.post('/api/verifier/verify-proof', (req, res) => {
 // DIRECTORY, AUDIT LOGS & HEALTH
 // =========================================================================
 app.get('/api/user/profile', authenticateToken, (req, res) => {
-  const user = db.prepare('SELECT id, name, email, course, age, avatar_url, created_at FROM users WHERE id = ?').get(req.user.userId);
+  const user = db.prepare('SELECT id, name, email, course, age, phone, card_number, avatar_url, created_at FROM users WHERE id = ?').get(req.user.userId);
   if (!user) return res.status(404).json({ error: 'User profile not found' });
 
   const claims = db.prepare('SELECT claim_key, claim_value, category FROM user_claims WHERE user_id = ?').all(user.id);
@@ -523,6 +531,8 @@ app.get('/api/user/profile', authenticateToken, (req, res) => {
     email: user.email,
     course: user.course,
     age: user.age,
+    phone: user.phone || '+91 98765 43210',
+    cardNumber: user.card_number || '4916 2201 8842 1093',
     avatarUrl: user.avatar_url,
     claims,
     createdAt: user.created_at
@@ -530,13 +540,17 @@ app.get('/api/user/profile', authenticateToken, (req, res) => {
 });
 
 app.get('/api/users', (req, res) => {
-  const users = db.prepare('SELECT id, name, email, course, age, avatar_url, created_at FROM users ORDER BY name ASC').all();
-  res.json(users);
+  const users = db.prepare('SELECT id, name, email, course, age, phone, card_number, avatar_url, created_at FROM users ORDER BY name ASC').all();
+  res.json(users.map(u => ({
+    ...u,
+    phone: u.phone || '+91 98765 43210',
+    cardNumber: u.card_number || '4916 2201 8842 1093'
+  })));
 });
 
 app.put('/api/users/:id', (req, res) => {
   const userId = req.params.id;
-  const { name, email, course, age, avatarUrl, faceImage } = req.body;
+  const { name, email, course, age, phone, cardNumber, card_number, avatarUrl, faceImage } = req.body;
 
   try {
     const existing = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
@@ -548,6 +562,8 @@ app.put('/api/users/:id', (req, res) => {
     const newEmail = email !== undefined ? email.trim() : existing.email;
     const newCourse = course !== undefined ? course.trim() : existing.course;
     const newAge = age !== undefined ? (parseInt(age) || existing.age) : existing.age;
+    const newPhone = phone !== undefined ? phone.trim() : (existing.phone || '+91 98765 43210');
+    const newCard = (cardNumber || card_number) !== undefined ? (cardNumber || card_number).trim() : (existing.card_number || '4916 2201 8842 1093');
     const newAvatar = avatarUrl !== undefined && avatarUrl !== null && avatarUrl !== '' ? avatarUrl.trim() : existing.avatar_url;
 
     if (newEmail !== existing.email) {
@@ -565,14 +581,29 @@ app.put('/api/users/:id', (req, res) => {
 
     db.prepare(`
       UPDATE users
-      SET name = ?, email = ?, course = ?, age = ?, avatar_url = ?, face_embedding = ?, updated_at = CURRENT_TIMESTAMP
+      SET name = ?, email = ?, course = ?, age = ?, phone = ?, card_number = ?, avatar_url = ?, face_embedding = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).run(newName, newEmail, newCourse, newAge, newAvatar, embeddingStr, userId);
+    `).run(newName, newEmail, newCourse, newAge, newPhone, newCard, newAvatar, embeddingStr, userId);
 
     db.prepare('UPDATE user_claims SET claim_value = ? WHERE user_id = ? AND claim_key = ?').run(newName, userId, 'Name');
     db.prepare('UPDATE user_claims SET claim_value = ? WHERE user_id = ? AND claim_key = ?').run(newEmail, userId, 'Email');
     db.prepare('UPDATE user_claims SET claim_value = ? WHERE user_id = ? AND claim_key = ?').run(newCourse, userId, 'Course / Department');
     db.prepare('UPDATE user_claims SET claim_value = ? WHERE user_id = ? AND claim_key = ?').run(String(newAge), userId, 'Age');
+
+    // Insert or update Phone and Credit Card claims
+    const existingPhoneClaim = db.prepare('SELECT id FROM user_claims WHERE user_id = ? AND claim_key = ?').get(userId, 'Phone Number');
+    if (existingPhoneClaim) {
+      db.prepare('UPDATE user_claims SET claim_value = ? WHERE id = ?').run(newPhone, existingPhoneClaim.id);
+    } else {
+      db.prepare('INSERT INTO user_claims (user_id, claim_key, claim_value, category) VALUES (?, ?, ?, ?)').run(userId, 'Phone Number', newPhone, 'basic');
+    }
+
+    const existingCardClaim = db.prepare('SELECT id FROM user_claims WHERE user_id = ? AND claim_key = ?').get(userId, 'Credit Card Number');
+    if (existingCardClaim) {
+      db.prepare('UPDATE user_claims SET claim_value = ? WHERE id = ?').run(newCard, existingCardClaim.id);
+    } else {
+      db.prepare('INSERT INTO user_claims (user_id, claim_key, claim_value, category) VALUES (?, ?, ?, ?)').run(userId, 'Credit Card Number', newCard, 'protected');
+    }
 
     db.prepare(`
       INSERT INTO audit_logs (user_id, user_name, event_type, step_reached, failure_reason, ip_address, user_agent, latency_ms)
@@ -588,6 +619,8 @@ app.put('/api/users/:id', (req, res) => {
         email: newEmail,
         course: newCourse,
         age: newAge,
+        phone: newPhone,
+        cardNumber: newCard,
         avatar_url: newAvatar
       }
     });
