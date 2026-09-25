@@ -77,4 +77,42 @@ if (seedTrusted === 0) {
   insertTrusted.run('gov.portal.service', 'National Identity Portal', 'trusted');
 }
 
+// Seed key personnel records for smooth presentation
+const defaultUsers = [
+  { id: 'ID-1', name: 'Sreevyas', email: 'sreevyas@example.com', course: 'Computer Science', age: 21, avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80' },
+  { id: 'ID-2', name: 'Daivik', email: 'daivik@example.com', course: 'Artificial Intelligence', age: 21, avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80' },
+  { id: 'ID-3', name: 'Adarsh', email: 'adarsh@example.com', course: 'Cyber Security', age: 22, avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80' },
+  { id: 'ID-4', name: 'Raghav', email: 'raghav@example.com', course: 'Data Science', age: 21, avatar: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=400&q=80' },
+  { id: 'ID-5', name: 'Shravan', email: 'shravan@example.com', course: 'Information Technology', age: 22, avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=400&q=80' }
+];
+
+const deleteExisting = db.prepare('DELETE FROM users WHERE id = ? OR email = ?');
+const insertUser = db.prepare(`
+  INSERT INTO users (id, name, email, course, age, face_embedding, barcode_payload, avatar_url)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+`);
+
+const insertClaim = db.prepare(`
+  INSERT INTO user_claims (user_id, claim_key, claim_value, category)
+  VALUES (?, ?, ?, ?)
+`);
+
+for (const u of defaultUsers) {
+  const dummyVec = Array.from({ length: 128 }, (_, i) => Math.sin(i + parseInt(u.id.replace('ID-', ''))));
+  deleteExisting.run(u.id, u.email);
+  insertUser.run(u.id, u.name, u.email, u.course, u.age, JSON.stringify(dummyVec), `BC-${u.id}`, u.avatar);
+
+  const claimCount = db.prepare('SELECT COUNT(*) as cnt FROM user_claims WHERE user_id = ?').get(u.id).cnt;
+  if (claimCount === 0) {
+    insertClaim.run(u.id, 'Name', u.name, 'basic');
+    insertClaim.run(u.id, 'Email', u.email, 'basic');
+    insertClaim.run(u.id, 'Course / Department', u.course, 'basic');
+    insertClaim.run(u.id, 'Age', String(u.age), 'basic');
+    insertClaim.run(u.id, 'Student ID', u.id, 'basic');
+    insertClaim.run(u.id, 'National SSN / Gov ID', `GOV-ID-${Math.floor(100000 + Math.random() * 900000)}`, 'protected');
+    insertClaim.run(u.id, 'Bank Account Details', `ACC-${Math.floor(10000000 + Math.random() * 90000000)}`, 'protected');
+  }
+}
+
 console.log('[DB] Digital Identity Wallet & Cryptographic Proof Database initialized.');
+

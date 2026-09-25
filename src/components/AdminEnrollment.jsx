@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { UserPlus, Camera, CheckCircle2, AlertTriangle, RefreshCw, GraduationCap, Users, ArrowLeft, ExternalLink, Calendar, BookOpen, Mail, User, Upload, Download, Trash2 } from 'lucide-react';
+import { UserPlus, Camera, CheckCircle2, AlertTriangle, RefreshCw, GraduationCap, Users, ArrowLeft, ExternalLink, Calendar, BookOpen, Mail, User, Upload, Download, Trash2, Pencil, X, Save } from 'lucide-react';
 import { api } from '../services/api';
 import { sound } from '../services/sound';
 
@@ -22,6 +22,19 @@ export default function AdminEnrollment({ onBackToGateway, onOpenBadges }) {
   const [cameraLoading, setCameraLoading] = useState(false);
   const [cameraError, setCameraError] = useState(null);
 
+  // Edit Modal State
+  const [editingUser, setEditingUser] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    email: '',
+    course: '',
+    age: '',
+    avatarUrl: '',
+    faceImage: null
+  });
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState(null);
+
   const videoRef = useRef(null);
   const streamRef = useRef(null);
 
@@ -36,6 +49,54 @@ export default function AdminEnrollment({ onBackToGateway, onOpenBadges }) {
     } finally {
       setLoadingStudents(false);
     }
+  };
+
+  const handleOpenEdit = (user) => {
+    sound.playClick();
+    setEditingUser(user);
+    setEditFormData({
+      name: user.name || '',
+      email: user.email || '',
+      course: user.course || '',
+      age: user.age || '',
+      avatarUrl: user.avatar_url || user.reference_photo || '',
+      faceImage: null
+    });
+    setEditError(null);
+  };
+
+  const handleSaveEdit = async (e) => {
+    e.preventDefault();
+    if (!editingUser) return;
+    setEditLoading(true);
+    setEditError(null);
+
+    try {
+      await api.updateUser(editingUser.id, editFormData);
+      sound.playAccessGranted();
+      setSuccessMsg(`Personnel ${editFormData.name} (${editingUser.id}) updated successfully!`);
+      setEditingUser(null);
+      loadStudents();
+    } catch (err) {
+      sound.playAccessDenied();
+      setEditError(err.message || 'Failed to update user details.');
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const handleEditPhotoUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setEditFormData(prev => ({
+        ...prev,
+        avatarUrl: ev.target.result,
+        faceImage: ev.target.result
+      }));
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleDeleteUser = async (userId, name) => {
@@ -568,14 +629,24 @@ export default function AdminEnrollment({ onBackToGateway, onOpenBadges }) {
                     <td className="py-2.5 px-3 text-cyan-300 whitespace-nowrap">{st.course}</td>
                     <td className="py-2.5 px-3 text-slate-300">{st.age} yrs</td>
                     <td className="py-2.5 px-3 text-right">
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteUser(st.id, st.name)}
-                        className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 transition-colors cursor-pointer"
-                        title="Remove Personnel"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEdit(st)}
+                          className="p-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 transition-colors cursor-pointer"
+                          title="Edit Personnel Details"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteUser(st.id, st.name)}
+                          className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 transition-colors cursor-pointer"
+                          title="Remove Personnel"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -584,6 +655,132 @@ export default function AdminEnrollment({ onBackToGateway, onOpenBadges }) {
           </div>
         )}
       </div>
+
+      {/* Edit Personnel Modal */}
+      {editingUser && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="cyber-card rounded-2xl p-6 sm:p-8 border border-cyan-500/40 bg-[#090d16] max-w-lg w-full shadow-2xl space-y-6 relative overflow-hidden">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <Pencil className="w-5 h-5 text-cyan-400" />
+                <h3 className="text-base font-bold text-white">Edit Personnel ({editingUser.id})</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingUser(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {editError && (
+              <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/40 text-rose-300 text-xs font-mono flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                <span>{editError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSaveEdit} className="space-y-4">
+              {/* Profile Picture Preview & Image URL / Upload */}
+              <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center gap-4">
+                <img
+                  src={editFormData.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'}
+                  alt={editFormData.name}
+                  className="w-16 h-16 rounded-xl object-cover border-2 border-cyan-500/50 shadow-md shrink-0"
+                />
+                <div className="flex-1 space-y-2">
+                  <label className="block text-[11px] font-mono text-slate-400 uppercase">Profile Picture URL</label>
+                  <input
+                    type="text"
+                    value={editFormData.avatarUrl}
+                    onChange={(e) => setEditFormData({ ...editFormData, avatarUrl: e.target.value })}
+                    placeholder="https://images.unsplash.com/..."
+                    className="w-full px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-slate-100 text-xs font-mono focus:border-cyan-400 focus:outline-none"
+                  />
+                  <label className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-mono border border-slate-700 cursor-pointer">
+                    <Upload className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Upload New Photo</span>
+                    <input type="file" accept="image/*" className="hidden" onChange={handleEditPhotoUpload} />
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono text-slate-300 mb-1 uppercase">Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={editFormData.name}
+                  onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 text-xs font-mono focus:border-cyan-400 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono text-slate-300 mb-1 uppercase">Email Address *</label>
+                <input
+                  type="email"
+                  required
+                  value={editFormData.email}
+                  onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 text-xs font-mono focus:border-cyan-400 focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-mono text-slate-300 mb-1 uppercase">Course / Dept</label>
+                  <input
+                    type="text"
+                    value={editFormData.course}
+                    onChange={(e) => setEditFormData({ ...editFormData, course: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 text-xs font-mono focus:border-cyan-400 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-mono text-slate-300 mb-1 uppercase">Age</label>
+                  <input
+                    type="number"
+                    min={15}
+                    max={99}
+                    value={editFormData.age}
+                    onChange={(e) => setEditFormData({ ...editFormData, age: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 text-xs font-mono focus:border-cyan-400 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setEditingUser(null)}
+                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono border border-slate-700 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={editLoading}
+                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-mono text-xs font-bold shadow-lg shadow-cyan-500/20 border border-cyan-400/40 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  {editLoading ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-3.5 h-3.5" />
+                      <span>Save Changes</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

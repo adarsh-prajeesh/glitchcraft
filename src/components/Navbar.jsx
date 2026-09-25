@@ -61,7 +61,7 @@ export default function Navbar({ currentView, setView, authenticatedUser, onLogo
 
           {/* Test Badges Quick View */}
           <button
-            onClick={() => { sound.playClick(); onOpenBadges(); }}
+            onClick={() => { sound.playClick(); if (onOpenBadges) onOpenBadges(); }}
             className="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 bg-slate-800/70 text-slate-300 hover:text-white border border-slate-700/60 hover:border-slate-600 cursor-pointer"
             title="View Student ID Badges"
           >

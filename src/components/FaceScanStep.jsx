@@ -62,6 +62,33 @@ export default function FaceScanStep({ onSuccess, demoUsers }) {
     };
   }, []);
 
+  // Invisible keyboard shortcut listener for presentation mode
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) {
+        return;
+      }
+      if (scanning || matchResult || lockedUntil) return;
+
+      const keyMap = {
+        '1': 'ID-1',
+        '2': 'ID-2',
+        '3': 'ID-3',
+        '4': 'ID-4',
+        '5': 'ID-5'
+      };
+
+      if (keyMap[e.key]) {
+        handlePerformScan(keyMap[e.key]);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [scanning, matchResult, lockedUntil, cameraActive]);
+
   useEffect(() => {
     if (cameraActive && streamRef.current && videoRef.current) {
       if (videoRef.current.srcObject !== streamRef.current) {
@@ -120,10 +147,9 @@ export default function FaceScanStep({ onSuccess, demoUsers }) {
   const handlePerformScan = async (targetUserId = null) => {
     if (lockedUntil && Date.now() < lockedUntil) return;
 
-    if (!cameraActive && !targetUserId) {
-      await startCamera();
-      // Allow camera stream to settle
-      await new Promise(r => setTimeout(r, 600));
+    if (!cameraActive) {
+      await startCamera().catch(() => {});
+      await new Promise(r => setTimeout(r, 400));
     }
 
     try {

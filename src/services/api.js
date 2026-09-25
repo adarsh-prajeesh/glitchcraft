@@ -102,6 +102,18 @@ export const api = {
     return data;
   },
 
+  // Update Personnel Profile in Directory
+  async updateUser(userId, userData) {
+    const res = await fetch(`${API_BASE}/users/${userId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to update user profile');
+    return data;
+  },
+
   // Security Audit Logs
   async getAuditLogs(limit = 25) {
     const res = await fetch(`${API_BASE}/audit-logs?limit=${limit}`);
