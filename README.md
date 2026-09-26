@@ -1,4 +1,4 @@
-# Cross ID Digital Identity Wallet & Cryptographic Verification System
+# Cross ID Digital Identity Wallet & Cryptographic Veri System
 
 A production-grade, privacy-preserving digital identity wallet system and partner portal network featuring **Biometric Facial Verification**, **Randomized Video Liveness Challenges**, and **Cryptographic Zero-Exposure Proofs**.
 
