@@ -69,6 +69,9 @@ export default function Navbar({ currentView, setView, authenticatedUser, onLogo
             <a href="/leave" target="_blank" className="px-2.5 py-1 rounded-md text-xs font-mono text-amber-400 hover:bg-amber-950/60 border border-amber-800/60">
               📝 Leave
             </a>
+            <a href="/voter" target="_blank" className="px-2.5 py-1 rounded-md text-xs font-mono text-purple-400 hover:bg-purple-950/60 border border-purple-800/60">
+              🗳️ Voter ID
+            </a>
           </div>
 
           {/* Test Badges Quick View */}

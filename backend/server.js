@@ -39,6 +39,10 @@ app.get('/leave', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'leave.html'));
 });
 
+app.get('/voter', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'voter.html'));
+});
+
 // Authentication Middleware
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];

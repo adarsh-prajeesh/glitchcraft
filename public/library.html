@@ -52,9 +52,25 @@
         </div>
       </div>
 
-      <!-- Authenticated User Token Badge -->
-      <div id="user-header-box" class="flex items-center gap-3">
-        <span class="text-xs font-mono text-slate-400 hidden sm:inline">Checking Cryptographic Token...</span>
+      <!-- Navigation Links & User Header -->
+      <div class="flex items-center gap-3">
+        <div class="hidden md:flex items-center gap-1 border-r border-slate-800 pr-3">
+          <a href="/attendance" class="px-2.5 py-1 rounded-md text-xs font-mono text-cyan-400 hover:bg-cyan-950/60 border border-cyan-800/60">
+            📊 Attendance
+          </a>
+          <a href="/library" class="px-2.5 py-1 rounded-md text-xs font-mono bg-emerald-950 text-emerald-300 border border-emerald-800">
+            📖 Library
+          </a>
+          <a href="/leave" class="px-2.5 py-1 rounded-md text-xs font-mono text-amber-400 hover:bg-amber-950/60 border border-amber-800/60">
+            📝 Leave
+          </a>
+          <a href="/voter" class="px-2.5 py-1 rounded-md text-xs font-mono text-purple-400 hover:bg-purple-950/60 border border-purple-800/60">
+            🗳️ Voter ID
+          </a>
+        </div>
+        <div id="user-header-box" class="flex items-center gap-3">
+          <span class="text-xs font-mono text-slate-400 hidden sm:inline">Checking Cryptographic Token...</span>
+        </div>
       </div>
     </div>
   </header>

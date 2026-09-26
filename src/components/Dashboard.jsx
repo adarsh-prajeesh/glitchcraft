@@ -139,34 +139,44 @@ export default function Dashboard({ user, onLogout }) {
           <h3 className="text-xs font-mono uppercase font-bold text-slate-400 tracking-wider mb-3">
             🌐 Passwordless Single Sign-On Partner Portals
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <a href="/attendance" target="_blank" className="p-3.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-cyan-500/50 transition-all group flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 font-bold text-lg">
+              <div className="w-9 h-9 rounded-lg bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 font-bold text-lg shrink-0">
                 📊
               </div>
               <div>
-                <div className="text-xs font-bold text-white group-hover:text-cyan-300">Attendance Tracker</div>
-                <div className="text-[10px] text-slate-400 font-mono">College Attendance Log</div>
+                <div className="text-xs font-bold text-white group-hover:text-cyan-300">Attendance</div>
+                <div className="text-[10px] text-slate-400 font-mono">College Log</div>
               </div>
             </a>
 
             <a href="/library" target="_blank" className="p-3.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-emerald-500/50 transition-all group flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold text-lg">
+              <div className="w-9 h-9 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold text-lg shrink-0">
                 📖
               </div>
               <div>
                 <div className="text-xs font-bold text-white group-hover:text-emerald-300">Central Library</div>
-                <div className="text-[10px] text-slate-400 font-mono">Borrowed Books & Fines</div>
+                <div className="text-[10px] text-slate-400 font-mono">Borrowed Books</div>
               </div>
             </a>
 
             <a href="/leave" target="_blank" className="p-3.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-amber-500/50 transition-all group flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 font-bold text-lg">
+              <div className="w-9 h-9 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 font-bold text-lg shrink-0">
                 📝
               </div>
               <div>
                 <div className="text-xs font-bold text-white group-hover:text-amber-300">Leave Portal</div>
-                <div className="text-[10px] text-slate-400 font-mono">Calendar & Application</div>
+                <div className="text-[10px] text-slate-400 font-mono">Applications</div>
+              </div>
+            </a>
+
+            <a href="/voter" target="_blank" className="p-3.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-purple-500/50 transition-all group flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400 font-bold text-lg shrink-0">
+                🗳️
+              </div>
+              <div>
+                <div className="text-xs font-bold text-white group-hover:text-purple-300">Voter ID</div>
+                <div className="text-[10px] text-slate-400 font-mono">Elector Check</div>
               </div>
             </a>
           </div>
