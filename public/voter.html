@@ -50,7 +50,7 @@
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <span class="text-base font-bold tracking-wider text-slate-100 font-mono">CAMPUS<span class="text-purple-400">PASS</span></span>
+            <span class="text-base font-bold tracking-wider text-slate-100 font-mono">CROSS<span class="text-purple-400">ID</span></span>
             <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-purple-950 text-purple-300 border border-purple-800">TRUSTED VOTER VERIFIER</span>
           </div>
           <p class="text-[11px] text-slate-400 font-mono">National Election Commission Elector Verification Portal</p>
@@ -100,7 +100,7 @@
       </div>
       <div class="flex items-center gap-2 shrink-0">
         <a href="/" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-mono border border-slate-700 transition-colors">
-          CampusPass Gateway
+          Cross ID Gateway
         </a>
       </div>
     </div>
@@ -310,7 +310,7 @@
           </div>
         `;
 
-        tokenText.textContent = `Aegis Wallet Verified for ${currentStudent.name} (${currentStudent.id}) • Registered Age: ${currentStudent.age || 19} Years`;
+        tokenText.textContent = `Cross ID Verified for ${currentStudent.name} (${currentStudent.id}) • Registered Age: ${currentStudent.age || 19} Years`;
       } else {
         currentStudent = { id: 'ID-1', name: 'Sreevyas', email: 'sreevyas@example.com', phone: '+91 98765 43210', age: 19, course: 'AI MLL', avatarUrl: '/avatars/sreevyas.jpg' };
         nameEl.textContent = currentStudent.name;
@@ -454,7 +454,7 @@
 
             <div class="p-4 rounded-xl bg-emerald-950/40 border border-emerald-500/40 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono text-emerald-300">
               <div class="flex items-center gap-2">
-                <span>✓ Status: The individual is eligible for a voter id. Authenticated via Aegis Identity Cryptographic Proof.</span>
+                <span>✓ Status: The individual is eligible for a voter id. Authenticated via Cross ID Cryptographic Proof.</span>
               </div>
               <button onclick="window.print()" class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold cursor-pointer shrink-0">
                 🖨️ Print Elector Card

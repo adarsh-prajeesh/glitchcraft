@@ -116,8 +116,8 @@
           activeProfile = VAULT_PROFILES[activeUserId];
         } else {
           // Check local cookies / localStorage fallback
-          const cookieMatch = document.cookie.match(/campuspass_session_id=([^;]+)/);
-          const savedId = cookieMatch ? cookieMatch[1] : localStorage.getItem('campuspass_session_id');
+          const cookieMatch = document.cookie.match(/crossid_session_id=([^;]+)/) || document.cookie.match(/campuspass_session_id=([^;]+)/);
+          const savedId = cookieMatch ? cookieMatch[1] : (localStorage.getItem('crossid_session_id') || localStorage.getItem('campuspass_session_id'));
           if (savedId && VAULT_PROFILES[savedId]) {
             activeUserId = savedId;
             activeProfile = VAULT_PROFILES[savedId];
@@ -193,11 +193,11 @@
 
   // Floating trigger pill on field focus
   function showAutofillPill(inputEl, fieldType) {
-    if (document.getElementById('campuspass-autofill-pill')) return;
+    if (document.getElementById('crossid-autofill-pill') || document.getElementById('campuspass-autofill-pill')) return;
 
     const rect = inputEl.getBoundingClientRect();
     const pill = document.createElement('div');
-    pill.id = 'campuspass-autofill-pill';
+    pill.id = 'crossid-autofill-pill';
     pill.style.position = 'absolute';
     pill.style.top = `${window.scrollY + rect.bottom + 6}px`;
     pill.style.left = `${window.scrollX + rect.left}px`;
@@ -217,7 +217,7 @@
 
     pill.innerHTML = `
       <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#10b981;"></span>
-      <span>🛡️ CampusPass Face ID Autofill (${fieldType === 'card' ? 'Card & PIN' : 'Password'})</span>
+      <span>🛡️ Cross ID Face ID Autofill (${fieldType === 'card' ? 'Card & PIN' : 'Password'})</span>
     `;
 
     document.body.appendChild(pill);
@@ -236,10 +236,10 @@
 
   // POPUP MODAL 1: Prompt to enter data when NO data is found for domain
   function showDataEntryPopupModal(profile, fieldType) {
-    if (document.getElementById('campuspass-entry-modal')) return;
+    if (document.getElementById('crossid-entry-modal')) return;
 
     const modal = document.createElement('div');
-    modal.id = 'campuspass-entry-modal';
+    modal.id = 'crossid-entry-modal';
     modal.style.position = 'fixed';
     modal.style.inset = '0';
     modal.style.zIndex = '9999999';
@@ -255,7 +255,7 @@
         <div style="display:flex; justify-space-between; align-items:center; border-bottom:1px solid #162038; padding-bottom:12px; margin-bottom:16px;">
           <div style="display:flex; align-items:center; gap:8px;">
             <span style="font-size:18px;">🔑</span>
-            <span style="font-weight:bold; color:#f59e0b;">CampusPass Password & Card Manager</span>
+            <span style="font-weight:bold; color:#f59e0b;">Cross ID Password & Card Manager</span>
           </div>
           <span style="font-size:10px; background:#451a03; color:#f59e0b; padding:2px 8px; border-radius:4px; border:1px solid #f59e0b;">NEW SITE DETECTED</span>
         </div>
@@ -346,12 +346,12 @@
 
   // POPUP MODAL 2: Face ID Verification & Autofill when data exists (Side Positioned Widget with Live Camera)
   function showFaceIDVaultModal(profile, vaultData) {
-    if (document.getElementById('campuspass-face-modal')) return;
+    if (document.getElementById('crossid-face-modal')) return;
 
     let activeCameraStream = null;
 
     const modal = document.createElement('div');
-    modal.id = 'campuspass-face-modal';
+    modal.id = 'crossid-face-modal';
     modal.style.position = 'fixed';
     modal.style.bottom = '24px';
     modal.style.right = '24px';
@@ -367,7 +367,7 @@
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #162038; padding-bottom:10px; margin-bottom:12px;">
           <div style="display:flex; align-items:center; gap:8px;">
             <span style="font-size:16px;">🛡️</span>
-            <span style="font-weight:bold; color:#06b6d4; font-size:13px;">CampusPass Face ID Vault</span>
+            <span style="font-weight:bold; color:#06b6d4; font-size:13px;">Cross ID Face ID Vault</span>
           </div>
           <span style="font-size:10px; background:#062c43; color:#06b6d4; padding:2px 8px; border-radius:4px; border:1px solid #06b6d4;">LIVE CAM ACTIVE</span>
         </div>

@@ -471,7 +471,7 @@ app.post('/api/auth/proof', (req, res) => {
       timestamp,
       nonce,
       provenClaims: claimsToProve,
-      issuer: 'Aegis Identity Wallet Infrastructure'
+      issuer: 'Cross ID Wallet Infrastructure'
     };
 
     // Sign cryptographic proof with HMAC-SHA256

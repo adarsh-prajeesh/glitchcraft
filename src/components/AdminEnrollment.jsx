@@ -312,7 +312,7 @@ export default function AdminEnrollment({ onBackToGateway, onOpenBadges }) {
               <ExternalLink className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">CampusPass Chrome Extension</h3>
+              <h3 className="text-base font-bold text-white">Cross ID Chrome Extension</h3>
               <p className="text-xs text-emerald-300 font-mono">
                 Stores authentication token into Chrome storage for single sign-on across other websites
               </p>

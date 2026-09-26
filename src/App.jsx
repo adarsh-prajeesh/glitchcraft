@@ -45,19 +45,19 @@ export default function App() {
 
     // Check URL parameters, Cookies, or localStorage for session_id auto-login
     const urlParams = new URLSearchParams(window.location.search);
-    const cookieMatch = document.cookie.match(/campuspass_session_id=([^;]+)/) || document.cookie.match(/campuspass_user_id=([^;]+)/);
+    const cookieMatch = document.cookie.match(/crossid_session_id=([^;]+)/) || document.cookie.match(/crossid_user_id=([^;]+)/) || document.cookie.match(/campuspass_session_id=([^;]+)/) || document.cookie.match(/campuspass_user_id=([^;]+)/);
     const sessionIdFromCookie = cookieMatch ? cookieMatch[1] : null;
 
-    const sessionIdParam = urlParams.get('session_id') || urlParams.get('session') || urlParams.get('token') || sessionIdFromCookie || localStorage.getItem('campuspass_session_id');
+    const sessionIdParam = urlParams.get('session_id') || urlParams.get('session') || urlParams.get('token') || sessionIdFromCookie || localStorage.getItem('crossid_session_id') || localStorage.getItem('campuspass_session_id');
 
     if (sessionIdParam) {
       api.loginWithSessionId(sessionIdParam)
         .then((res) => {
           if (res.success && res.user) {
             handleStep1Success(res);
-            localStorage.setItem('campuspass_session_id', res.user.id);
-            document.cookie = `campuspass_session_id=${res.user.id}; path=/; max-age=31536000; SameSite=Lax`;
-            document.cookie = `campuspass_user_id=${res.user.id}; path=/; max-age=31536000; SameSite=Lax`;
+            localStorage.setItem('crossid_session_id', res.user.id);
+            document.cookie = `crossid_session_id=${res.user.id}; path=/; max-age=31536000; SameSite=Lax`;
+            document.cookie = `crossid_user_id=${res.user.id}; path=/; max-age=31536000; SameSite=Lax`;
           }
         })
         .catch((err) => {
@@ -87,9 +87,10 @@ export default function App() {
     handleSetView('dashboard');
 
     if (data.user?.id) {
+      localStorage.setItem('crossid_session_id', data.user.id);
       localStorage.setItem('campuspass_session_id', data.user.id);
-      document.cookie = `campuspass_session_id=${data.user.id}; path=/; max-age=31536000; SameSite=Lax`;
-      document.cookie = `campuspass_user_id=${data.user.id}; path=/; max-age=31536000; SameSite=Lax`;
+      document.cookie = `crossid_session_id=${data.user.id}; path=/; max-age=31536000; SameSite=Lax`;
+      document.cookie = `crossid_user_id=${data.user.id}; path=/; max-age=31536000; SameSite=Lax`;
     }
 
     // Broadcast authenticated session to Chrome Extension Identity Wallet
@@ -100,8 +101,11 @@ export default function App() {
       timestamp: Date.now()
     };
     try {
+      localStorage.setItem('crossid_auth_session', JSON.stringify(sessionPayload));
       localStorage.setItem('campuspass_auth_session', JSON.stringify(sessionPayload));
+      window.dispatchEvent(new CustomEvent('CROSSID_AUTH_SYNC', { detail: sessionPayload }));
       window.dispatchEvent(new CustomEvent('CAMPUSPASS_AUTH_SYNC', { detail: sessionPayload }));
+      window.postMessage({ type: 'CROSSID_AUTH_SYNC', payload: sessionPayload }, '*');
       window.postMessage({ type: 'CAMPUSPASS_AUTH_SYNC', payload: sessionPayload }, '*');
     } catch (e) {
       console.warn('SSO sync broadcast failed:', e);
@@ -118,11 +122,17 @@ export default function App() {
     sound.playAccessDenied();
 
     try {
+      document.cookie = 'crossid_session_id=; path=/; max-age=0;';
+      document.cookie = 'crossid_user_id=; path=/; max-age=0;';
       document.cookie = 'campuspass_session_id=; path=/; max-age=0;';
       document.cookie = 'campuspass_user_id=; path=/; max-age=0;';
+      localStorage.removeItem('crossid_session_id');
+      localStorage.removeItem('crossid_auth_session');
       localStorage.removeItem('campuspass_session_id');
       localStorage.removeItem('campuspass_auth_session');
+      window.dispatchEvent(new CustomEvent('CROSSID_AUTH_LOGOUT'));
       window.dispatchEvent(new CustomEvent('CAMPUSPASS_AUTH_LOGOUT'));
+      window.postMessage({ type: 'CROSSID_AUTH_LOGOUT' }, '*');
       window.postMessage({ type: 'CAMPUSPASS_AUTH_LOGOUT' }, '*');
     } catch (e) {}
   };

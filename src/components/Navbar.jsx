@@ -1,5 +1,5 @@
 import React from 'react';
-import { GraduationCap, LogOut, KeyRound, UserPlus, Barcode } from 'lucide-react';
+import { GraduationCap, LogOut, KeyRound, UserPlus } from 'lucide-react';
 
 export default function Navbar({ currentView, setView, authenticatedUser, onLogout, onOpenBadges }) {
   return (
@@ -14,7 +14,7 @@ export default function Navbar({ currentView, setView, authenticatedUser, onLogo
 
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-base font-bold tracking-wider text-slate-100 font-mono">CAMPUS<span className="text-cyan-400">PASS</span></span>
+              <span className="text-base font-bold tracking-wider text-slate-100 font-mono">CROSS<span className="text-cyan-400">ID</span></span>
             </div>
             <p className="text-[11px] text-slate-400 font-mono tracking-tight flex items-center gap-1.5">
               <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
@@ -73,18 +73,6 @@ export default function Navbar({ currentView, setView, authenticatedUser, onLogo
               🗳️ Voter ID
             </a>
           </div>
-
-          {/* Test Badges Quick View */}
-          <button
-            onClick={() => { if (onOpenBadges) onOpenBadges(); }}
-            className="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 bg-slate-800/70 text-slate-300 hover:text-white border border-slate-700/60 hover:border-slate-600 cursor-pointer"
-            title="View Student ID Badges"
-          >
-            <Barcode className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="hidden md:inline">ID Badges</span>
-          </button>
-
-          {/* Test Badges Quick View */}
 
           {/* Authenticated User Status or Logout */}
           {authenticatedUser && (

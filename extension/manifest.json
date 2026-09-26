@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "CampusPass SSO - Multi-Factor Auto-Sign-In",
+  "name": "Cross ID - Multi-Factor Auto-Sign-In",
   "version": "1.0.0",
-  "description": "Seamless Single Sign-On (SSO) assistant powered by AegisGuard Face ID & Barcode MFA. Automatically signs into campus portals and partner sites.",
+  "description": "Seamless Single Sign-On (SSO) assistant powered by Cross ID Biometric & Cryptographic Proofs. Automatically signs into portals and partner sites.",
   "permissions": [
     "storage",
     "activeTab"
@@ -12,7 +12,7 @@
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "CampusPass SSO Assistant",
+    "default_title": "Cross ID SSO Assistant",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",

@@ -1,6 +1,6 @@
-# AegisGuard Multi-Factor Authentication (MFA) System
+# Cross ID Digital Identity Wallet & Cryptographic Verification System
 
-A production-grade, sequential multi-factor authentication (MFA) system and user dashboard featuring **Server-Side Camera Face ID Biometrics** and **Optical ID Card Barcode Verification**.
+A production-grade, privacy-preserving digital identity wallet system and partner portal network featuring **Biometric Facial Verification**, **Randomized Video Liveness Challenges**, and **Cryptographic Zero-Exposure Proofs**.
 
 Access is granted **ONLY** when both credentials (Facial Embedding + Physical ID Barcode Payload) match the **exact same registered personnel** in the backend database.
 

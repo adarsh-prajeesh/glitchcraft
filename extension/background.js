@@ -1,5 +1,5 @@
 /**
- * CampusPass SSO Assistant - Background Service Worker (Manifest V3)
+ * Cross ID SSO Assistant - Background Service Worker (Manifest V3)
  * Manages authenticated user session state, badge indicators, and cross-site SSO authorization.
  */
 
@@ -19,7 +19,7 @@ chrome.runtime.onInstalled.addListener(async () => {
     await chrome.storage.local.set({ settings: DEFAULT_SETTINGS });
   }
   updateBadge(data.session);
-  console.log('[CampusPass SSO] Service worker initialized.');
+  console.log('[Cross ID SSO] Service worker initialized.');
 });
 
 // Update extension icon badge
@@ -27,10 +27,10 @@ function updateBadge(session) {
   if (session && session.user && isSessionValid(session)) {
     chrome.action.setBadgeText({ text: 'SSO' });
     chrome.action.setBadgeBackgroundColor({ color: '#10b981' }); // Emerald green
-    chrome.action.setTitle({ title: `CampusPass Active: Signed in as ${session.user.name}` });
+    chrome.action.setTitle({ title: `Cross ID Active: Signed in as ${session.user.name}` });
   } else {
     chrome.action.setBadgeText({ text: '' });
-    chrome.action.setTitle({ title: 'CampusPass SSO: Logged Out' });
+    chrome.action.setTitle({ title: 'Cross ID SSO: Logged Out' });
   }
 }
 
@@ -49,12 +49,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       authToken: payload.authToken,
       token: payload.authToken,
       timestamp: payload.timestamp || Date.now(),
-      origin: sender.tab?.url || 'campus-portal'
+      origin: sender.tab?.url || 'crossid-portal'
     };
 
     chrome.storage.local.set({ session, token: payload.authToken, authToken: payload.authToken }, () => {
       updateBadge(session);
-      console.log(`[CampusPass SSO] Session & Token saved into extension storage for: ${session.user.name}`);
+      console.log(`[Cross ID SSO] Session & Token saved into extension storage for: ${session.user.name}`);
       sendResponse({ success: true, user: session.user, token: payload.authToken });
     });
     return true; // Keep message channel open for async response
@@ -86,7 +86,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (type === 'CLEAR_AUTH_SESSION') {
     chrome.storage.local.remove(['session'], () => {
       updateBadge(null);
-      console.log('[CampusPass SSO] Session cleared.');
+      console.log('[Cross ID SSO] Session cleared.');
       sendResponse({ success: true });
     });
     return true;
